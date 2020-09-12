@@ -1,0 +1,104 @@
+.header
+    display flex
+    justify-content space-between
+    align-items center
+    min-height $header_height
+    padding 0 calc(var(--space)/2)
+    top 0
+    z-index 10
+
+    .header__left
+    .header__right
+        display flex
+        align-items center
+        font-family rubik,sans-serif,Varela Round
+
+    .header__left
+    
+        .logo__text
+            font-size 18px
+            padding 16px 10px 16px 10px
+            border-radius 5px
+
+    .header__right
+    
+        .navbar__menus
+            padding 0 0 0 15px
+            
+            .navbar-menu
+                font-size 16px
+                padding 16px 10px 16px 10px
+                border-radius 5px
+
+                &:hover
+                    background-color var(--bg-menu)
+
+        #btn-search
+        #btn-toggle-dark
+            padding 16px 10px 16px 10px
+
+        #b2t
+            display none
+            width 40px
+            height 40px
+            position fixed
+            z-index 1001
+            right 20px
+            bottom 30px
+            background none
+
+        .dropdown-icon
+            display none
+            padding 16px 10px 16px 10px
+            border 0 !important
+            background-color transparent
+
+            *
+                width 20px
+                height 20px
+
+        .dropdown-menus
+            display none
+            background var(--bg-content-color)
+            position absolute
+            left 10px
+            right 10px
+            top 10px
+            z-index 10000
+            border-radius 6px
+            padding 24px
+            justify-items center
+            justify-content center 
+            flex-direction column
+            transition all 0.35s ease
+            transform translateY(2.25rem)
+            opacity 0
+
+
+            .dropback-icon
+                position absolute
+                top 10px
+                right 10px
+                padding 16px 10px 16px 10px
+                border 0 !important
+                background-color transparent
+
+                *
+                    width 20px
+                    height 20px
+
+            .dropdown-menu
+                padding 10px
+
+if (hexo-config('navbar.sticky'))
+    @media screen and (min-width: 1080px)
+        .header
+            position sticky
+
+@media screen and (max-width: 764px)
+    .navbar__menus
+        display none !important
+    
+    .dropdown-icon
+        display block !important
+
