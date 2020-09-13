@@ -361,11 +361,83 @@ Redis 链表的特点如下：
 
 ### 整数集合
 
-1、数据结构
+1. #### 数据结构
 
-```
+   ```C
+   typedef struct intset {
+   
+       // 编码方式
+       uint32_t encoding;
+   
+       // 集合包含的元素数量
+       uint32_t length;
+   
+       // 保存元素的数组
+       int8_t contents[];
+   
+   } intset;
+   ```
 
-```
+   
+
+   * 整数集合的所有元素都保存在 `contents` 数组中，这些元素按从小到大有序且不重复排列，虽然这里声明的 `contents` 是 `int8_t` 类型的，但是其真正类型取决于 `encoding`
+   * 如果 `encoding` 属性的值为 `INTSET_ENC_INT16` ， 那么 `contents` 就是一个 `int16_t` 类型的数组， 数组里的每个项都是一个 `int16_t` 类型的整数值 （最小值为 `-32,768` ，最大值为 `32,767` ）。
+   * 如果 `encoding` 属性的值为 `INTSET_ENC_INT32` ， 那么 `contents` 就是一个 `int32_t` 类型的数组， 数组里的每个项都是一个 `int32_t` 类型的整数值 （最小值为 `-2,147,483,648` ，最大值为 `2,147,483,647` ）。
+   * 如果 `encoding` 属性的值为 `INTSET_ENC_INT64` ， 那么 `contents` 就是一个 `int64_t` 类型的数组， 数组里的每个项都是一个 `int64_t` 类型的整数值 （最小值为 `-9,223,372,036,854,775,808` ，最大值为 `9,223,372,036,854,775,807` ）。
+
+![image-20200913165033270](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200913165033270.png)
+
+如上图示例中 `encoding` 保存的是 `INTSET_ENC_INT16` 且数组长度为 5 的，所以 `contents` 占 `16 * 5 = 80`位，`encoding` 的编码取决于数组中最大的元素，也就是会出现这种情况，数组中只有一个元素是 `INTSET_ENC_INT64` 类型，其它都是 `INTSET_ENC_INT16` 类型，也要按照 `INTSET_ENC_INT64` 编码
+
+2. #### 升级
+
+   当一个新元素要添加到数组里时，并且新元素比所有原来的元素都要长时，就要进行升级(upgrade)，升级共分三步：
+
+   * 根据新元素大小，扩展数组大小，并为新元素分配空间
+   * 将数组现有元素都转换成新元素类型，并放置到正确位置，且保证有序性
+   * 将新元素添加到数组中
+
+   ![image-20200913170140832](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200913170140832.png)
+
+   比如上图的例子，每个元素都占 16 位，数组长度为 48 位
+
+   ![image-20200913170226774](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200913170226774.png)
+
+   如果现在要添加一个 int32_t 类型的 65535 到集合里，此时就要进行升级，先要根据类型和元素个数计算分配的空间，`(3 + 1) * 32 = 128` 位
+
+   ![image-20200913170508397](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200913170508397.png)
+
+   分配完空间后，对原有元素进行转换，因为元素 3 在 1、2、3、65535 中排第三，所以移动到索引 2 的位置上
+
+   ![image-20200913170642094](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200913170642094.png)
+
+   ![image-20200913170653918](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200913170653918.png)
+
+   ![image-20200913170705407](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200913170705407.png)
+
+   ![image-20200913170714838](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200913170714838.png)
+
+   最后升级完成后的结构
+
+   ![image-20200913170734347](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200913170734347.png)
+
+   因为每次向集合添加新元素都有可能会引起升级，每次升级都要对元素进行转换，所以添加新元素的复杂度为 O(n)。
+
+   **升级后新元素的位置** 因为引发升级操作的新元素比现有所有元素都要大，所以这个新元素要么大于所有元素（索引为 length - 1），要么小于所有元素（索引为 0）
+
+3. #### 为什么要设计为升级
+
+   * 灵活
+
+     因为 C 语言是静态类型语言，般只使用 `int16_t` 类型的数组来保存 `int16_t` 类型的值， 只使用 `int32_t` 类型的数组来保存 `int32_t` 类型的值， 诸如此类。自动升级操作可以将 `int16_t` 、 `int32_t` 或者 `int64_t` 类型的整数添加到集合中，不用担心类型错误，非常灵活。
+
+   * 节约内存
+
+     如果要让一个数组同时能够保存  `int16_t` 、 `int32_t` 、`int64_t` 类型的元素，最简单的就是直接使用 `int64_t` 类型，有可能浪费内存。
+
+   * 降级
+
+     不会对升级后的数组进行降级
 
 
 
