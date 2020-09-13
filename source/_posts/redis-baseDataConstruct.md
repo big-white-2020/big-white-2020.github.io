@@ -354,3 +354,18 @@ Redis 链表的特点如下：
    ![image-20200829181222233](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200829181222233.png)
 
    依次 rehash 3、4 上的索引，在进行渐进式 rehash 的过程中，删除、查找、更新等操作都会在 `ht[0]` 和 `ht[1]` 两个哈希表上，但是每次添加都是添加到 `ht[1]` 中
+
+### 跳表
+
+这篇跳表的文章写得很不错[Skip List--跳表（全网最详细的跳表文章没有之一)](https://www.jianshu.com/p/9d8296562806)
+
+### 整数集合
+
+1、数据结构
+
+```
+
+```
+
+
+
