@@ -1,6 +1,6 @@
 ---
 title : JAVA8 新特性1 —— Lambda 表达式
-date : 2020年9月13日 17:15:45
+date : 2020-09-14 17:15:45
 tag : [JAVA, Lambda, JAVA8]
 ---
 

@@ -1,6 +1,6 @@
 ---
 title : JAVA8 新特性2 —— Stream API
-date : 2020年9月13日 17:25:45
+date : 2020-9-13 17:25:45
 tag : [JAVA, Stream API, JAVA8]
 ---
 
