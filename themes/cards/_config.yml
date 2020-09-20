@@ -47,10 +47,10 @@ navbar:
   menu: 
     - name: 首页
       url: /
-    #- name: 标签
-     # url: /tags/
-    #- name: 归档
-     # url: /archives/
+    - name: 标签
+      url: /tags/
+    - name: 归档
+      url: /archives/
     #- name: 友链
      # url: /friends/
     #- name: Page
@@ -182,7 +182,7 @@ meta:
 # ---------------------------------------------------------------
 
 comments: 
-  use:   # disqus | disqusjs | valine | minivaline | gitalk | gitment | levere | changyan | wildfire
+  use: gitalk  # disqus | disqusjs | valine | minivaline | gitalk | gitment | levere | changyan | wildfire
 
   ## Disqus
   disqus:  
@@ -241,17 +241,17 @@ comments:
 
   ## Gitalk
   gitalk:
-    repo:
-    owner:
-    clientID:
-    clientSecret:
+    repo: big-white-2020.github.io
+    owner: big-white-2020
+    clientID: 5343251f7191333c2cf8
+    clientSecret: c0471f2aaeafdec2f9ad0edfd4df7404db114101
 
   ## Gitment
   gitment:
-    repo:
-    owner:
-    client_id:
-    client_secret:
+    repo: big-white-2020.github.io
+    owner: big-white-2020
+    client_id: 5343251f7191333c2cf8
+    client_secret: c0471f2aaeafdec2f9ad0edfd4df7404db114101
   
   # Livere 来比力
   livere: 
@@ -282,9 +282,9 @@ comments:
 # ---------------------------------------------------------------
 
 analytics:
-  google_site_id:
+  google_site_id: UA-178473615-1
   gtags_site_id:
-  baidu_site_id: 
+  baidu_site_id: fb2dded415192023dd108d2b441862de
   cnzz_site_id: 
 
 
@@ -305,7 +305,7 @@ footer:
   statistics: 
 
     # 选择 LeanCloud/busuanzi 为网站计数。如果你完全不想启用，将 `use` 项留空即可
-    use:   # leancloud | busuanzi
+    use: busuanzi  # leancloud | busuanzi
 
     # 如果选择使用 LeanCloud，则需完善下面的配置项
     leancloud: 

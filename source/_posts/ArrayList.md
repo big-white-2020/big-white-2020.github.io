@@ -6,11 +6,7 @@ tag : [JAVA, ArrayList, 集合, 源码]
 
 
 
-首先存储的数据结构为：
-
-```
-transient Object[] elementData;
-```
+首先存储的数据结构为：`transient Object[] elementData;`
 
 #### 构造方法
 

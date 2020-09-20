@@ -57,6 +57,18 @@ prismjs:
   line_number: false
   tab_replace: ''
 
+# lazyload
+lazyload:
+  enable: true
+  onlypost: false
+  loadingImage:
+
+# search
+search:
+  enable: true
+  path: search.json
+  field: All  # Page | Post | All
+
 # Home page setting
 # path: Root path for your blogs index page. (default = '')
 # per_page: Posts displayed per page. (0 = disable pagination)
