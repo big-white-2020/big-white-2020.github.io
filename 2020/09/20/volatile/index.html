@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+
+    
+
+    <!-- 渲染优化 -->
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="HandheldFriendly" content="True" >
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!--icon-->
+
+    <link rel="shortcut icon" type='image/x-icon' href="/favicon.ico">
+
+
+    <!-- meta -->
+
+
+<title>Java 并发 —— Volatile | 大白</title>
+
+
+    <meta name="keywords" content="并发, Java, volatile">
+
+
+    <!-- OpenGraph -->
+ 
+    <meta name="description" content="volatile 是轻量级的 synchronized，它在多处理器开发中保证共享变量的可见性，可见性是指当一个线程修改一个共享变量时，另一个线程能够读取到修改后的值。volatile 的执行成本比 sychronized 更低，因为 volatile 不会引起线程的上下文切换。 1.1 volatile 的定义与原理在连接 volatile 的原理之前，先看看实现原理相关的 CPU 术语  vo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java 并发 —— Volatile">
+<meta property="og:url" content="http://example.com/2020/09/20/volatile/index.html">
+<meta property="og:site_name" content="大白">
+<meta property="og:description" content="volatile 是轻量级的 synchronized，它在多处理器开发中保证共享变量的可见性，可见性是指当一个线程修改一个共享变量时，另一个线程能够读取到修改后的值。volatile 的执行成本比 sychronized 更低，因为 volatile 不会引起线程的上下文切换。 1.1 volatile 的定义与原理在连接 volatile 的原理之前，先看看实现原理相关的 CPU 术语  vo">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200510145308329.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513164407.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513164854.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200511164748.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513165731.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513170010.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513172121.png">
+<meta property="article:published_time" content="2020-09-20T07:15:45.000Z">
+<meta property="article:modified_time" content="2021-04-18T05:59:04.456Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="并发">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="volatile">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200510145308329.png">
+
+
+    
+<link rel="stylesheet" href="/css/style/main.css">
+ 
+
+
+    
+<link rel="stylesheet" href="/css/style/dark.css">
+
+    
+<script src="/js/darkmode.js"></script>
+
+
+
+    
+    
+        <link rel="stylesheet" id="hl-default-theme" href="/css/highlight/github.css" media="none" onload="if(getComputedStyle(document.documentElement).getPropertyValue('--color-mode').indexOf('dark')===-1)this.media='all'">
+        
+    
+
+    
+    
+
+    
+    <link rel="stylesheet" href="/css/style/note.css" media="none" onload="this.media='all'">
+
+
+     
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+ 
+
+    <!-- custom head -->
+
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+    <body>
+        <div id="app">
+            <header class="header">
+    <div class="header__left">
+        <a href="/" class="button">
+            <span class="logo__text">
+                大白
+            </span>
+        </a>
+    </div>
+    <div class="header__right">
+        
+            <div class="navbar__menus">
+                
+                    <a href="/" class="navbar-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="navbar-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="navbar-menu button">
+                        归档
+                    </a>
+                
+            </div>
+        
+        
+        
+    <a href="/search/" id="btn-search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="24" height="24" fill="currentColor" stroke="currentColor" stroke-width="32"><path d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z"></path></svg>
+    </a>
+
+
+        
+        
+    <a href="javaScript:void(0);" id="btn-toggle-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </a>
+
+
+         
+    <a href="javaScript:void(0);" id="b2t" aria-label="Back to Top" title="Back to Top">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='32' height='32' fill="currentColor" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.889,11.611c-0.17,0.17-0.443,0.17-0.612,0l-3.189-3.187l-3.363,3.36c-0.171,0.171-0.441,0.171-0.612,0c-0.172-0.169-0.172-0.443,0-0.611l3.667-3.669c0.17-0.17,0.445-0.172,0.614,0l3.496,3.493C14.058,11.167,14.061,11.443,13.889,11.611 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.692-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.383,10c0-4.07-3.312-7.382-7.383-7.382S2.618,5.93,2.618,10S5.93,17.381,10,17.381S17.383,14.07,17.383,10"></path>
+        </svg>
+    </a>
+
+
+        
+            <a class="dropdown-icon button" id="btn-dropdown">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path fill="currentColor" d="M3.314,4.8h13.372c0.41,0,0.743-0.333,0.743-0.743c0-0.41-0.333-0.743-0.743-0.743H3.314c-0.41,0-0.743,0.333-0.743,0.743C2.571,4.467,2.904,4.8,3.314,4.8z M16.686,15.2H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,15.2,16.686,15.2z M16.686,9.257H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,9.257,16.686,9.257z"></path>
+                </svg>
+            </a>
+            <div class="dropdown-menus" id="dropdown-menus">
+                <a class="dropback-icon button" id="btn-dropback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                        <path fill="currentColor" d="M11.469,10l7.08-7.08c0.406-0.406,0.406-1.064,0-1.469c-0.406-0.406-1.063-0.406-1.469,0L10,8.53l-7.081-7.08c-0.406-0.406-1.064-0.406-1.469,0c-0.406,0.406-0.406,1.063,0,1.469L8.531,10L1.45,17.081c-0.406,0.406-0.406,1.064,0,1.469c0.203,0.203,0.469,0.304,0.735,0.304c0.266,0,0.531-0.101,0.735-0.304L10,11.469l7.08,7.081c0.203,0.203,0.469,0.304,0.735,0.304c0.267,0,0.532-0.101,0.735-0.304c0.406-0.406,0.406-1.064,0-1.469L11.469,10z"></path>
+                    </svg>
+                </a>
+                
+                    <a href="/" class="dropdown-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="dropdown-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="dropdown-menu button">
+                        归档
+                    </a>
+                
+            </div>
+            <script>
+                document.getElementById('btn-dropdown').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    requestAnimationFrame(() => {
+                        dd.style.display = 'flex';
+                        requestAnimationFrame(() => {
+                            dd.style.transform = 'translateY(0)';
+                            dd.style.opacity = '1';
+                        });
+                    });
+                });
+                document.getElementById('btn-dropback').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    dd.style.transform = 'translateY(2.25rem)';                    
+                    dd.style.opacity = '0';
+                    setTimeout(() => {dd.style.display = 'none';}, 350);
+                });
+            </script>
+        
+    </div>
+</header>
+
+
+            <main class="main">
+    
+<div class="post-title">
+    <h1 class="post-title__text">
+        Java 并发 —— Volatile
+    </h1>
+    <div class="post-title__meta">
+        <a href="/archives/2020/09/" class="post-meta__date button">
+    2020-09-20
+</a>
+        
+ 
+        
+    
+     
+    <span id="busuanzi_container_page_pv" hidden>
+        <span class="separate-dot"></span>
+        <span></span>
+        <span id="busuanzi_value_page_pv"></span>
+        <span>Views</span>
+    </span>
+
+
+
+ 
+
+ 
+    </div>
+</div>
+
+
+    <div class="post__with-side">
+        <aside class="post-side">
+            <div class="post-side__toc">
+                <ol class="toc"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-1-volatile-%E7%9A%84%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">1.1 volatile 的定义与原理</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#volatile-%E7%9A%84%E4%BD%BF%E7%94%A8%E4%BC%98%E5%8C%96"><span class="toc-number">2.</span> <span class="toc-text">volatile 的使用优化</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#volatile-%E7%9A%84%E7%89%B9%E6%80%A7"><span class="toc-number">3.</span> <span class="toc-text">volatile 的特性</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#volatile%E5%86%99-%E8%AF%BB%E5%BB%BA%E7%AB%8B%E7%9A%84happens-before%E5%85%B3%E7%B3%BB"><span class="toc-number">4.</span> <span class="toc-text">volatile写-读建立的happens-before关系</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#volatile%E5%86%99-%E8%AF%BB%E7%9A%84%E5%86%85%E5%AD%98%E8%AF%AD%E4%B9%89"><span class="toc-number">5.</span> <span class="toc-text">volatile写-读的内存语义</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#volatile%E5%86%85%E5%AD%98%E8%AF%AD%E4%B9%89%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="toc-number">6.</span> <span class="toc-text">volatile内存语义的实现</span></a></li></ol>
+            </div>
+        </aside>
+        <article class="post content-card">
+            <div class="post__header">
+                 
+                
+            </div>
+            <div class="post__content">
+                <p>volatile 是轻量级的 synchronized，它在多处理器开发中保证共享变量的可见性，可见性是指当一个线程修改一个共享变量时，另一个线程能够读取到修改后的值。volatile 的执行成本比 sychronized 更低，因为 volatile 不会引起线程的上下文切换。</p>
+<h5 id="1-1-volatile-的定义与原理"><a href="#1-1-volatile-的定义与原理" class="headerlink" title="1.1 volatile 的定义与原理"></a>1.1 volatile 的定义与原理</h5><p>在连接 volatile 的原理之前，先看看实现原理相关的 CPU 术语</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200510145308329.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200510145308329.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200510145308329"></p>
+<p>volatile 是怎么保证可见性的呢？通过获取 JIT 编译器生成的汇编指令来查看</p>
+<p>Java 代码</p>
+<p><code>instance = new Singleton();   // instance 是 volatile 变量</code></p>
+<p>转换为汇编后</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">0x01a3de1d: movb $0×0,0×1104800(%esi);</span><br><span class="line">0x01a3de24: lock addl $0×0,(%esp);</span><br></pre></td></tr></table></figure>
+
+<p>有 volatile 修饰的共享变量在进行写操作时会多出第二行汇编代码，第二行代码是一个 Lock 前缀的指令，在多核处理器下会引发：</p>
+<ol>
+<li>将当前处理器缓存行的数据写会到系统内存。</li>
+<li>这个写会内存操作会使其它处理器缓存了该内存地址的数据无效</li>
+</ol>
+<p>为了提高处理速度，处理器会将系统内存的数据读到高速缓存中（L1、L2），但是对高速缓存操作后不知道什么时候写回到内存中，如果对用 volatile 修饰的变量进行写操作后，JVM 会向处理器发送一条 Lock 前缀的指令，这时就会将修改后的变量写回到内存中，但是，即使将变量写回后，在多处理器的情况下，其它处理器缓存的还是旧的值，所以就有了 <strong>缓存一致性协议</strong> 。每个处理器通过嗅探总线上传播的数据来检查自己的缓存值是不是过期了，如果发现自己缓存行对应的内存地址进行过修改，那就将自己的缓存行设置为无效，下次进行操作时，再到内存中读到缓存中。</p>
+<p>volatile 的两条实现原则</p>
+<ol>
+<li><p>Lock 前缀指令会引起处理器缓存写到内存</p>
+<p> 以前，在多处理器环境下，Lock# 信号在声言该信号期间，处理器会独占共享内存，对于 Intel486 和奔腾系列处理器，在锁操作时，总是在总线上声言 Lock# 信号。但是，在最近的处理器中 Lock# 信号一般不锁总线，而是锁定缓存。如果需要访问的内存区域已经缓存在处理器内部，则不会声言 Lock# 信号，它会锁定这块内存区域的缓存并写回到处理器内部，并使用缓存一致性机制来保证修改的原子性，称为 <strong>缓存锁定</strong> ，缓存一致性会阻止同时修改两个及以上处理器缓存的内存区域数据。</p>
+</li>
+<li><p>一个处理器将缓存写回到内存导致其它处理器缓存的数据失效</p>
+<p> IA-32处理器和Intel 64处理器使用MESI（修改、独占、共享、无效）控制协议去维护内部缓存和其他处理器缓存的一致性。在多核处理器系统中进行操作的时候，IA-32和Intel 64处理器能嗅探其他处理器访问系统内存和它们的内部缓存。处理器使用嗅探技术保证它的内部缓存、系统内存和其他处理器的缓存的数据在总线上保持一致。</p>
+</li>
+</ol>
+<h5 id="volatile-的使用优化"><a href="#volatile-的使用优化" class="headerlink" title="volatile 的使用优化"></a>volatile 的使用优化</h5><p>在 JDK7 的并发包中新增了一个队列集合类 LinkedTransferQueue，代码如下</p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line"><span class="comment">/** 队列中的头部节点 */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">final</span> PaddedAtomicReference&lt;QNode&gt; head;</span><br><span class="line"><span class="comment">/** 队列中的尾部节点 */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">transient</span> <span class="keyword">final</span> PaddedAtomicReference&lt;QNode&gt; tail;</span><br><span class="line"><span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">PaddedAtomicReference</span> &lt;<span class="title">T</span>&gt; <span class="keyword">extends</span> <span class="title">AtomicReference</span> <span class="title">T</span>&gt; </span>&#123;</span><br><span class="line">	<span class="comment">// 使用很多4个字节的引用追加到64个字节</span></span><br><span class="line">	Object p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, pa, pb, pc, pd, pe;</span><br><span class="line">	PaddedAtomicReference(T r) &#123;</span><br><span class="line">	<span class="keyword">super</span>(r);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AtomicReference</span> &lt;<span class="title">V</span>&gt; <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span> </span>&#123;</span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">volatile</span> V value;</span><br><span class="line">	<span class="comment">// 省略其他代码</span></span><br><span class="line">｝</span><br></pre></td></tr></table></figure>
+
+<p>它使用内部类来定义头节点（head）和尾节点（tail），这个内部类相对于父类只是将共享变量追加到 64 字节。一个对象引用占 4 个字节，追加 15 个变量（60 字节），再加上父类的 value 变量，一共是64 字节。因为现在主流的处理器的 L1、L2、L3的高速缓存行是64字节宽，不支持充分填充行，所以如果头结点和尾节点都不足64字节时，处理器会将他们读到一个缓存行中，多处理器下会缓存同样的头、尾节点，当一个处理器试图修改头节点时，会将整个缓存行锁定，那么在缓存一致性协议下，其它的处理器不能访问自己缓存的尾节点，严重影响效率。</p>
+<p>以下两种情况使用 volatile 变量时不应该追加到64字节</p>
+<ol>
+<li>缓存行非64字节宽的处理器。</li>
+<li>共享变量不会被频繁写，因为追加字节会导致处理器要读取更多的字节到高速缓存中，会消耗更多的性能。</li>
+</ol>
+<h5 id="volatile-的特性"><a href="#volatile-的特性" class="headerlink" title="volatile 的特性"></a>volatile 的特性</h5><p>理解 volatile 特性的一个好方法就是把对 volatile 变量的单个读写看成是使用同一个锁对这些单个读/写操作做了同步。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class VolatileFeaturesExample &#123;</span><br><span class="line">	volatile long vl &#x3D; 0L; 		&#x2F;&#x2F; 使用volatile声明64位的long型变量</span><br><span class="line">	public void set(long l) &#123;</span><br><span class="line">		vl &#x3D; l; 				&#x2F;&#x2F; 单个volatile变量的写</span><br><span class="line">	&#125; </span><br><span class="line">	public void getAndIncrement () &#123;</span><br><span class="line">		vl++; 					&#x2F;&#x2F; 复合（多个）volatile变量的读&#x2F;写</span><br><span class="line">	&#125; </span><br><span class="line">	public long get() &#123;</span><br><span class="line">		return vl; 				&#x2F;&#x2F; 单个volatile变量的读</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果多个线程分别调用上面程序的3个方法，这个程序的语义和下面的程序等价</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class VolatileFeaturesExample &#123;</span><br><span class="line">	long vl &#x3D; 0L; 							&#x2F;&#x2F; 64位的long型普通变量</span><br><span class="line">	public synchronized void set(long l) &#123;  &#x2F;&#x2F; 对单个的普通变量的写用同一个锁同步</span><br><span class="line">		vl &#x3D; l;</span><br><span class="line">	&#125; </span><br><span class="line">	public void getAndIncrement () &#123; 		&#x2F;&#x2F; 普通方法调用</span><br><span class="line">		long temp &#x3D; get(); 					&#x2F;&#x2F; 调用已同步的读方法</span><br><span class="line">		temp +&#x3D; 1L; 						&#x2F;&#x2F; 普通写操作</span><br><span class="line">		set(temp); 							&#x2F;&#x2F; 调用已同步的写方法</span><br><span class="line">	&#125; </span><br><span class="line">	public synchronized long get() &#123; 		&#x2F;&#x2F; 对单个的普通变量的读用同一个锁同步</span><br><span class="line">		return vl;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可见性。对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入。<br>原子性：对任意单个volatile变量的读/写具有原子性，但类似于volatile++这种复合操作不具有原子性  </p>
+<h5 id="volatile写-读建立的happens-before关系"><a href="#volatile写-读建立的happens-before关系" class="headerlink" title="volatile写-读建立的happens-before关系"></a>volatile写-读建立的happens-before关系</h5><p>从内存语义的角度来说，volatile的写-读与锁的释放-获取有相同的内存效果：volatile写和锁的释放有相同的内存语义；volatile读与锁的获取有相同的内存语义。  </p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class VolatileExample &#123;</span><br><span class="line">	int a &#x3D; 0;</span><br><span class="line">	volatile boolean flag &#x3D; false;</span><br><span class="line">	public void writer() &#123;</span><br><span class="line">		a &#x3D; 1; 			&#x2F;&#x2F; 1</span><br><span class="line">		flag &#x3D; true; 	&#x2F;&#x2F; 2</span><br><span class="line">	&#125; </span><br><span class="line">	public void reader() &#123;</span><br><span class="line">		if (flag) &#123; 	&#x2F;&#x2F; 3</span><br><span class="line">		int i &#x3D; a; 		&#x2F;&#x2F; 4</span><br><span class="line">		……</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>假设线程A执行writer()方法之后，线程B执行reader()方法。根据happens-before规则，这个过程建立的happens-before关系可以分为3类：  </p>
+<ol>
+<li>根据程序次序规则，1 happens-before 2;3 happens-before 4</li>
+<li>根据volatile规则，2 happens-before 3 </li>
+<li>根据happens-before的传递性规则，1 happens-before 4  </li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513164407.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513164407.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg=="></p>
+<h5 id="volatile写-读的内存语义"><a href="#volatile写-读的内存语义" class="headerlink" title="volatile写-读的内存语义"></a>volatile写-读的内存语义</h5><p>当写一个 volatile 变量时，JMM 会把该线程对应的本地内存中的共享变量值刷新到主内存。</p>
+<p>当读一个volatile 变量时，JMM 会把该线程对应的本地内存置为无效，线程接下来将从主内存中读取共享变量。</p>
+<h5 id="volatile内存语义的实现"><a href="#volatile内存语义的实现" class="headerlink" title="volatile内存语义的实现"></a>volatile内存语义的实现</h5><p>下表是JMM针对编译器制定的volatile重排序规则表  </p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513164854.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513164854.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg=="></p>
+<p>当第一个操作为普通变量的读或写时，如果第二个操作为volatile写，则编译器不能重排序这两个操作，可以保证在volatile写之前，其前面的所有普通写操作已经对任意处理器可见了。</p>
+<p>当第二个操作是volatile写时，不管第一个操作是什么，都不能重排序。这个规则确保volatile写之前的操作不会被编译器重排序到volatile写之后  </p>
+<p>当第一个操作是volatile读时，不管第二个操作是什么，都不能重排序。这个规则确保volatile读之后的操作不会被编译器重排序到volatile读之前  </p>
+<p>当第一个操作是volatile写，第二个操作是volatile读时，不能重排序</p>
+<p>为了实现volatile的内存语义，编译器在生成字节码时，会在指令序列中插入内存屏障来禁止特定类型的处理器重排序。对于编译器来说，发现一个最优布置来最小化插入屏障的总数几乎不可能。为此，JMM采取保守策略  </p>
+<ol>
+<li>在每个volatile写操作的前面插入一个StoreStore屏障。  </li>
+<li>在每个volatile写操作的后面插入一个StoreLoad屏障。</li>
+<li>在每个volatile读操作的后面插入一个LoadLoad屏障。</li>
+<li>在每个volatile读操作的后面插入一个LoadStore屏障。  </li>
+</ol>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200511164748.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200511164748.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg=="></p>
+<p>下面是 volatile 写插入内存屏障后生成的指令序列示意图</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513165731.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513165731.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg=="></p>
+<p>StoreStore屏障可以保证在volatile写之前，其前面的所有普通写操作已经对任意处理器可见了。这是因为StoreStore屏障将保障上面所有的普通写在volatile写之前刷新到主内存。  </p>
+<p>这里比较有意思的是，volatile写后面的StoreLoad屏障。此屏障的作用是避免volatile写与后面可能有的volatile读/写操作重排序。因为编译器常常无法准确判断在一个volatile写的后面是否需要插入一个StoreLoad屏障（比如，一个volatile写之后方法立即return）。为了保证能正确实现volatile的内存语义，JMM在采取了保守策略：__在每个volatile写的后面，或者在每个volatile读的前面插入一个StoreLoad屏障__。从整体执行效率的角度考虑，JMM最终选择了在每个volatile写的后面插入一个StoreLoad屏障。因为volatile写-读内存语义的常见使用模式是：一个写线程写volatile变量，多个读线程读同一个volatile变量。当读线程的数量大大超过写线程时，选择在volatile写之后插入StoreLoad屏障将带来可观的执行效率的提升。从这里可以看到JMM在实现上的一个特点：首先确保正确性，然后再去追求执行效率。  </p>
+<p>下面是 volatile 读插入内存屏障后生成的指令序列示意图</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513170010.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513170010.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg=="></p>
+<p>在实际执行时，只要不改变volatile写-读的内存语义，编译器可以根据具体情况省略不必要的屏障。例如下面这个例子</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class VolatileBarrierExample &#123;</span><br><span class="line">	int a;</span><br><span class="line">	volatile int v1 &#x3D; 1;</span><br><span class="line">	volatile int v2 &#x3D; 2;</span><br><span class="line">	void readAndWrite() &#123;</span><br><span class="line">		int i &#x3D; v1; 	&#x2F;&#x2F; 第一个volatile读</span><br><span class="line">		int j &#x3D; v2; 	&#x2F;&#x2F; 第二个volatile读</span><br><span class="line">		a &#x3D; i + j; 		&#x2F;&#x2F; 普通写</span><br><span class="line">		v1 &#x3D; i + 1; 	&#x2F;&#x2F; 第一个volatile写</span><br><span class="line">    	v2 &#x3D; j * 2; 	&#x2F;&#x2F; 第二个 volatile写</span><br><span class="line">	&#125; …</span><br><span class="line">&#x2F;&#x2F; 其他方法</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>针对readAndWrite()方法，编译器在生成字节码时可以做如下的优化  </p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513172121.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/20200513172121.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg=="></p>
+<p>注意，最后的StoreLoad屏障不能省略。因为第二个volatile写之后，方法立即return。此时编译器可能无法准确断定后面是否会有volatile读或写，为了安全起见，编译器通常会在这里插入一个StoreLoad屏障。  </p>
+
+            </div>
+             
+            <div class="post-footer__meta">
+    <p>
+        updated at 2021-04-18
+    </p>
+</div> 
+            <div class="post-meta__cats">
+    
+    
+        <a href="/tags/%E5%B9%B6%E5%8F%91/" class="post-tags__link button"># 并发</a>
+    
+        <a href="/tags/Java/" class="post-tags__link button"># Java</a>
+    
+        <a href="/tags/volatile/" class="post-tags__link button"># volatile</a>
+    
+</div> 
+        </article>
+        
+            <div class="post__comments content-card" id="comment">
+                
+    <h4>Comments</h4>
+    
+    
+    
+    
+    
+    <div id="gitalk-container"></div>
+
+    
+    
+    
+    
+
+
+            </div>
+        
+    </div>
+
+
+</main>
+
+            <footer class="footer">
+    
+
+
+    
+    
+    
+        <span id="busuanzi_container_site_uv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_uv"></span>
+            <span>Viewers</span>
+            
+                <span>&nbsp;&nbsp;&nbsp;|</span>
+            
+        </span>
+    
+    
+        <span id="busuanzi_container_site_pv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_pv"></span>
+            <span>Views</span>
+            
+        </span>
+    
+ 
+ 
+
+ 
+    
+        
+        <p class="footer-copyright">
+            Copyright&nbsp;©&nbsp;2021&nbsp;<a href="/">大白</a>
+        </p>
+    
+    
+    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme - <a href="https://github.com/ChrAlpha/hexo-theme-cards" target="_blank">Cards</a></p>
+</footer>
+
+        </div>
+        
+    <script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.1.0/dist/lazyload.min.js"></script>
+    <script>
+        window.lazyLoadOptions = {
+            elements_selector: ".lazyload",
+            threshold: 0
+        };
+    </script>
+ 
+
+ 
+    <script>
+        window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+        ga('create', 'UA-178473615-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <script async src="https://www.google-analytics.com/analytics.js"></script>
+ 
+
+ 
+
+ 
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?fb2dded415192023dd108d2b441862de';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+ 
+
+  
+
+
+
+ 
+
+
+    
+
+
+
+    
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.css">
+
+    
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.js"></script>
+
+    <script>
+        let lazyloadT = Boolean('[object Object]'),
+            auto_fancybox = Boolean('true')
+        if (auto_fancybox) {
+            $(".post__content").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        } else {
+            $(".post__content").find("fancybox").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        }
+    </script>
+ 
+
+ 
+    <script defer src="/js/b2t.js"></script>
+
+
+
+
+
+    
+
+    
+    
+    
+
+    
+    
+    
+    <script>
+        function loadComment() {
+            let e, i;
+            (e = document.createElement("script")).src = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js',
+            document.body.appendChild(e);
+            e.onload = () => {
+                var gitalk = new Gitalk({
+                    clientID: '5343251f7191333c2cf8',
+                    clientSecret: 'c0471f2aaeafdec2f9ad0edfd4df7404db114101',
+                    repo: 'big-white-2020.github.io',
+                    owner: 'big-white-2020',
+                    admin: 'big-white-2020',
+                    id: window.location.pathname,
+                    distractionFreeMode: false
+                });
+                gitalk.render('gitalk-container');
+            };
+            (i = document.createElement("link")).rel = "stylesheet",
+            i.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css',
+            document.head.appendChild(i);
+        }
+    
+        var runningOnBrowser = typeof window !== "undefined";
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+    
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var comment_observer = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) {
+                        loadComment();
+                        comment_observer.disconnect();
+                    }
+                }, { threshold: [0] });
+                comment_observer.observe(document.getElementById('comment'));
+            } else {
+                loadComment();
+            }
+        }, 1);
+    </script>
+
+    
+    
+    
+    
+    
+    
+
+    
+
+
+
+    </body>
+</html>

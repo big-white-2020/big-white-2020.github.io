@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+
+    
+
+    <!-- 渲染优化 -->
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="HandheldFriendly" content="True" >
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!--icon-->
+
+    <link rel="shortcut icon" type='image/x-icon' href="/favicon.ico">
+
+
+    <!-- meta -->
+
+
+<title>Git 基本使用 | 大白</title>
+
+
+    <meta name="keywords" content="git, tool">
+
+
+    <!-- OpenGraph -->
+ 
+    <meta name="description" content="主要参考廖雪峰的官方网站-Git教程，删减上下文信息，把一些命令提取出来进行了简单的解释 基本操作 添加文件到仓库 git add &lt;file&gt; &#x2F;&#x2F; 一次添加单个文件到暂存区，或者 git add . 添加当前仓库目录内所有修改的文件到暂存区git commit -m &quot;message&quot; &#x2F;&#x2F; 添加到版本库  查看工作区状态">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Git 基本使用">
+<meta property="og:url" content="http://example.com/2020/09/14/Git/index.html">
+<meta property="og:site_name" content="大白">
+<meta property="og:description" content="主要参考廖雪峰的官方网站-Git教程，删减上下文信息，把一些命令提取出来进行了简单的解释 基本操作 添加文件到仓库 git add &lt;file&gt; &#x2F;&#x2F; 一次添加单个文件到暂存区，或者 git add . 添加当前仓库目录内所有修改的文件到暂存区git commit -m &quot;message&quot; &#x2F;&#x2F; 添加到版本库  查看工作区状态">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170537776.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170521233.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170458433.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170422825.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200809152942552.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200809153031449.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200809153745425.png">
+<meta property="article:published_time" content="2020-09-14T11:44:09.000Z">
+<meta property="article:modified_time" content="2021-04-18T05:59:04.454Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="git">
+<meta property="article:tag" content="tool">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170537776.png">
+
+
+    
+<link rel="stylesheet" href="/css/style/main.css">
+ 
+
+
+    
+<link rel="stylesheet" href="/css/style/dark.css">
+
+    
+<script src="/js/darkmode.js"></script>
+
+
+
+    
+    
+        <link rel="stylesheet" id="hl-default-theme" href="/css/highlight/github.css" media="none" onload="if(getComputedStyle(document.documentElement).getPropertyValue('--color-mode').indexOf('dark')===-1)this.media='all'">
+        
+    
+
+    
+    
+
+    
+    <link rel="stylesheet" href="/css/style/note.css" media="none" onload="this.media='all'">
+
+
+     
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+ 
+
+    <!-- custom head -->
+
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+    <body>
+        <div id="app">
+            <header class="header">
+    <div class="header__left">
+        <a href="/" class="button">
+            <span class="logo__text">
+                大白
+            </span>
+        </a>
+    </div>
+    <div class="header__right">
+        
+            <div class="navbar__menus">
+                
+                    <a href="/" class="navbar-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="navbar-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="navbar-menu button">
+                        归档
+                    </a>
+                
+            </div>
+        
+        
+        
+    <a href="/search/" id="btn-search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="24" height="24" fill="currentColor" stroke="currentColor" stroke-width="32"><path d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z"></path></svg>
+    </a>
+
+
+        
+        
+    <a href="javaScript:void(0);" id="btn-toggle-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </a>
+
+
+         
+    <a href="javaScript:void(0);" id="b2t" aria-label="Back to Top" title="Back to Top">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='32' height='32' fill="currentColor" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.889,11.611c-0.17,0.17-0.443,0.17-0.612,0l-3.189-3.187l-3.363,3.36c-0.171,0.171-0.441,0.171-0.612,0c-0.172-0.169-0.172-0.443,0-0.611l3.667-3.669c0.17-0.17,0.445-0.172,0.614,0l3.496,3.493C14.058,11.167,14.061,11.443,13.889,11.611 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.692-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.383,10c0-4.07-3.312-7.382-7.383-7.382S2.618,5.93,2.618,10S5.93,17.381,10,17.381S17.383,14.07,17.383,10"></path>
+        </svg>
+    </a>
+
+
+        
+            <a class="dropdown-icon button" id="btn-dropdown">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path fill="currentColor" d="M3.314,4.8h13.372c0.41,0,0.743-0.333,0.743-0.743c0-0.41-0.333-0.743-0.743-0.743H3.314c-0.41,0-0.743,0.333-0.743,0.743C2.571,4.467,2.904,4.8,3.314,4.8z M16.686,15.2H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,15.2,16.686,15.2z M16.686,9.257H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,9.257,16.686,9.257z"></path>
+                </svg>
+            </a>
+            <div class="dropdown-menus" id="dropdown-menus">
+                <a class="dropback-icon button" id="btn-dropback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                        <path fill="currentColor" d="M11.469,10l7.08-7.08c0.406-0.406,0.406-1.064,0-1.469c-0.406-0.406-1.063-0.406-1.469,0L10,8.53l-7.081-7.08c-0.406-0.406-1.064-0.406-1.469,0c-0.406,0.406-0.406,1.063,0,1.469L8.531,10L1.45,17.081c-0.406,0.406-0.406,1.064,0,1.469c0.203,0.203,0.469,0.304,0.735,0.304c0.266,0,0.531-0.101,0.735-0.304L10,11.469l7.08,7.081c0.203,0.203,0.469,0.304,0.735,0.304c0.267,0,0.532-0.101,0.735-0.304c0.406-0.406,0.406-1.064,0-1.469L11.469,10z"></path>
+                    </svg>
+                </a>
+                
+                    <a href="/" class="dropdown-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="dropdown-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="dropdown-menu button">
+                        归档
+                    </a>
+                
+            </div>
+            <script>
+                document.getElementById('btn-dropdown').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    requestAnimationFrame(() => {
+                        dd.style.display = 'flex';
+                        requestAnimationFrame(() => {
+                            dd.style.transform = 'translateY(0)';
+                            dd.style.opacity = '1';
+                        });
+                    });
+                });
+                document.getElementById('btn-dropback').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    dd.style.transform = 'translateY(2.25rem)';                    
+                    dd.style.opacity = '0';
+                    setTimeout(() => {dd.style.display = 'none';}, 350);
+                });
+            </script>
+        
+    </div>
+</header>
+
+
+            <main class="main">
+    
+<div class="post-title">
+    <h1 class="post-title__text">
+        Git 基本使用
+    </h1>
+    <div class="post-title__meta">
+        <a href="/archives/2020/09/" class="post-meta__date button">
+    2020-09-14
+</a>
+        
+ 
+        
+    
+     
+    <span id="busuanzi_container_page_pv" hidden>
+        <span class="separate-dot"></span>
+        <span></span>
+        <span id="busuanzi_value_page_pv"></span>
+        <span>Views</span>
+    </span>
+
+
+
+ 
+
+ 
+    </div>
+</div>
+
+
+    <div class="post__with-side">
+        <aside class="post-side">
+            <div class="post-side__toc">
+                <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C"><span class="toc-number">1.</span> <span class="toc-text">基本操作</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%9C%E7%A8%8B%E4%BB%93%E5%BA%93"><span class="toc-number">2.</span> <span class="toc-text">远程仓库</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%88%86%E6%94%AF%E7%AE%A1%E7%90%86"><span class="toc-number">3.</span> <span class="toc-text">分支管理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E7%AD%BE%E7%AE%A1%E7%90%86"><span class="toc-number">4.</span> <span class="toc-text">标签管理</span></a></li></ol>
+            </div>
+        </aside>
+        <article class="post content-card">
+            <div class="post__header">
+                 
+                
+            </div>
+            <div class="post__content">
+                <p>主要参考<a target="_blank" rel="noopener" href="https://www.liaoxuefeng.com/wiki/896043488029600">廖雪峰的官方网站-Git教程</a>，删减上下文信息，把一些命令提取出来进行了简单的解释</p>
+<h4 id="基本操作"><a href="#基本操作" class="headerlink" title="基本操作"></a>基本操作</h4><ol>
+<li><p>添加文件到仓库</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git add &lt;file&gt; &#x2F;&#x2F; 一次添加单个文件到暂存区，或者 git add . 添加当前仓库目录内所有修改的文件到暂存区</span><br><span class="line">git commit -m &quot;message&quot; &#x2F;&#x2F; 添加到版本库</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看工作区状态</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git status &#x2F;&#x2F; 哪些文件修改过</span><br><span class="line">git diff &#x2F;&#x2F; 查看文件修改内容</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>版本回退</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git reset --hard HEAD^ &#x2F;&#x2F; HEAD^ 表示上个版本，HEAD^^ 表示上上个版本，HEAD~10 表示上100个版本</span><br><span class="line">git reset --hard &lt;commit_id&gt; &#x2F;&#x2F; 回退到 commit_id 那个版本</span><br><span class="line">git log &#x2F;&#x2F; 可以查看提交历史</span><br><span class="line">git reflog &#x2F;&#x2F; 查看命令，决定回到哪个版本</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 说明一下 --hard 和 --soft 的区别</span><br><span class="line">&#x2F;&#x2F; hard 修改版本库，修改暂存区，修改工作区</span><br><span class="line">&#x2F;&#x2F; soft 修改版本库，保留暂存区，保留工作区，即只回退 commit 信息</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 还有一个回退命令</span><br><span class="line">git revert HEAD &#x2F;&#x2F; revert 是用一次新的 commit来回滚之前的 commit，git reset是直接删除指定的 commit，在回滚这一操作上看，效果差不多。但是在日后继续merge以前的老版本时有区别</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ol>
+<ol start="4">
+<li><p>工作区和版本库</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170537776.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170537776.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200906170537776"></p>
+</li>
+</ol>
+<ol start="5">
+<li><p>撤销修改</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">工作区：</span><br><span class="line">git checkout -- file &#x2F;&#x2F; 放弃工作区某个文件的修改</span><br><span class="line">暂存区：</span><br><span class="line">git reset HEAD &lt;file&gt; &#x2F;&#x2F; 可以把暂存区的修改撤销掉（unstage），重新放回工作区，git reset命令既可以回退版本，也可以把暂存区的修改回退到工作区</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>小结</p>
+<ul>
+<li>场景1：当你改乱了工作区某个文件的内容，想直接丢弃工作区的修改时，用命令<code>git checkout -- file</code>。</li>
+<li>场景2：当你不但改乱了工作区某个文件的内容，还添加到了暂存区时，想丢弃修改，分两步，第一步用命令<code>git reset HEAD &lt;file&gt;</code>，就回到了场景1，第二步按场景1操作。</li>
+<li>场景3：已经提交了不合适的修改到版本库时，想要撤销本次提交，参考[版本回退]，不过前提是没有推送到远程库。</li>
+</ul>
+</li>
+<li><p>删除文件</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">rm file &#x2F;&#x2F; 系统手动删除</span><br><span class="line">git rm file &#x2F;&#x2F; 删除文件</span><br><span class="line">git commit -m &quot;remove file&quot;</span><br></pre></td></tr></table></figure>
+
+<p>先手动删除文件，然后使用git rm <file>和git add<file>效果是一样的</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">手动删错了，但是版本库里还有，只需：</span><br><span class="line">git checkout -- file</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h4 id="远程仓库"><a href="#远程仓库" class="headerlink" title="远程仓库"></a>远程仓库</h4><ol>
+<li>添加远程库</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git remote add origin git@server-name:path&#x2F;repo-name.git &#x2F;&#x2F; 关联一个远程库</span><br><span class="line">git push -u origin master &#x2F;&#x2F; 第一次推送master分支的所有内容</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>克隆远程仓库</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git clone git@server-name:path&#x2F;repo-name.git</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 指定分支</span><br><span class="line">git clone -b branchName git@server-name:path&#x2F;repo-name.git</span><br></pre></td></tr></table></figure>
+
+<h4 id="分支管理"><a href="#分支管理" class="headerlink" title="分支管理"></a>分支管理</h4><ol>
+<li><p>创建与合并分支</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git checkout -b &lt;branch&gt; </span><br><span class="line">&#x2F;&#x2F; git checkout 加上 -b 相当于以下两条命令</span><br><span class="line">git branch &lt;branch&gt;</span><br><span class="line">git checkout &lt;branch&gt;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 查看当前分支</span><br><span class="line">git branch</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 合并分支</span><br><span class="line">git checkout master &#x2F;&#x2F; 先切换到 master，也可以是 staging 等</span><br><span class="line">git merge &lt;branch&gt; &#x2F;&#x2F; git merge 命令用于合并指定分支到当前分支，默认为 Fast forward，“快进模式”，也就是直接把master指向&lt;branch&gt;的当前提交，所以合并速度非常快</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 删除分支</span><br><span class="line">git branch -d &lt;branch&gt;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 切换分支为 git checkout &lt;branch&gt;，而撤销修改则为 git checkout -- file，挺迷惑的，git 2.23 时添加了 switch 命令，用于切换分支</span><br><span class="line">&#x2F;&#x2F; 创建并切换到分支</span><br><span class="line">git switch -c &lt;branch&gt;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 切换分支</span><br><span class="line">git switch &lt;branch&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>解决冲突</p>
+<p><a target="_blank" rel="noopener" href="https://www.liaoxuefeng.com/wiki/896043488029600/900004111093344">解决冲突</a></p>
+</li>
+<li><p>分支管理策略</p>
+<p>上面讲到了合并分支的 Fast forward 方式，在这种模式下，删除分支后，会丢掉分支信息，如果强制禁用 Fast forward 模式，git 在 merge 时会生成一个新的 commit，就能保留分支信息</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git merge --no-ff -m &quot;merge with no-ff&quot; &lt;branch&gt; &#x2F;&#x2F; --no-ff 参数表示禁用 Fast forward</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170521233.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170521233.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200906170521233"></p>
+<p>好的分支管理策略应该像下图一样：</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170458433.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170458433.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200906170458433"></p>
+</li>
+<li><p>bug 分支</p>
+<p>当 master 分支出现 bug 需要紧急修复时，需要创建新的 bug 分支进行修复，而自己的工作又只做到一半需要保存时，先把工作现场</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git stash &#x2F;&#x2F; 把当前工作现场隐藏起来，完成 bug 修复后</span><br><span class="line">git stash list &#x2F;&#x2F; 查看隐藏的工作现场，可以通过以下两种方式恢复</span><br><span class="line">git stash apply &#x2F;&#x2F; 这种方式恢复，stash 不会删除，需要 git stash drop 进行删除</span><br><span class="line">git stash pop &#x2F;&#x2F; 恢复的同时把 stash 也删了</span><br></pre></td></tr></table></figure>
+
+<p>修复 master 分支后发现当前工作的分支也有这个 bug，现在只需用</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git cherry-pick &lt;commit-id&gt; &#x2F;&#x2F; 会复制 &lt;commit-id&gt; 这次提交的修改到当前分支，并自动提交一次当前分支</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>删除没有合并的分支</p>
+<p>如果有一个实验性质没有合并的分支需要删除需要</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git branch -D &lt;branch&gt; &#x2F;&#x2F; 没有合并的分支需要用 -D</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>多人协作</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git remote -v &#x2F;&#x2F; 查看远程分支</span><br><span class="line">git push origin &lt;branch&gt; &#x2F;&#x2F; 推送分支，要指定本地分支，这样，Git就会把该分支推送到远程库对应的远程分支上</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 从远程仓库 clone 时，默认是 master 分支，如果在本地创建和远程分支对应的分支</span><br><span class="line">git checkout -b &lt;branch&gt; origin&#x2F;dev</span><br></pre></td></tr></table></figure>
+
+<p>与远程分支建立联系</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git branch --set-upstream-to &lt;branch-name&gt; origin&#x2F;&lt;branch-name&gt;</span><br></pre></td></tr></table></figure>
+
+<p>一般多人协作的模式如下：</p>
+<ul>
+<li>首先，可以试图用git push origin <branch-name>推送自己的修改；</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li>如果推送失败，则因为远程分支比你的本地更新，需要先用git pull试图合并；</li>
+</ul>
+<ul>
+<li>如果合并有冲突，则解决冲突，并在本地提交；</li>
+</ul>
+<ul>
+<li>没有冲突或者解决掉冲突后，再用git push origin <branch-name>推送就能成功！</li>
+</ul>
+<ul>
+<li>如果git pull提示no tracking information，则说明本地分支和远程分支的链接关系没有创建，用命令git branch –set-upstream-to <branch-name> origin/<branch-name>。</li>
+</ul>
+<ol start="7">
+<li><p>Rebase</p>
+<p>理想状态下希望提交记录是一条直线</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170422825.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200906170422825.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200906170422825"></p>
+<p>可以通过 rebase 实现，一般把 rebase 叫变基，概念比较抽象，用下面几张图来解释a</p>
+</li>
+</ol>
+<p>初始情况：</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200809152942552.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200809152942552.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200809152942552"></p>
+<p>使用 git rebase master 后，bugFix 分支上的工作在 master 的最顶端</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200809153031449.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200809153031449.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200809153031449"></p>
+<p>然后切换到 master 分支，进行 git rebase bugFix</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200809153745425.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200809153745425.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200809153745425"></p>
+<p>这里扩展一下 git pull 和 git pull –rebase 的区别</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git pull &#x3D; git fetch + git merge</span><br><span class="line">git pull --rebase &#x3D; git fetch + git rebase</span><br></pre></td></tr></table></figure>
+
+<p>参考：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/kevingrace/p/5896706.html">简单对比git pull 和 git pull –rebase 的使用</a></p>
+<p>同时还有一个经常使用的 git rebase -i ，这个命令可以选取你连续提交的多次进行合并。</p>
+<h4 id="标签管理"><a href="#标签管理" class="headerlink" title="标签管理"></a>标签管理</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">git tag v1.0 &#x2F;&#x2F; 默认打在最新的 commit上，如果需要打在其他提交上</span><br><span class="line">git tag v0.9 &lt;commit-id&gt;</span><br><span class="line">git tag -a v0.1 -m &quot;version 0.1 released&quot; &lt;commit-id&gt; &#x2F;&#x2F; 用-a指定标签名，-m指定说明文字，git show &lt;tagname&gt;可以看到说明文字</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 删除标签</span><br><span class="line">git tag -d v0.1</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 因为创建的标签都只存储在本地，不会自动推送到远程。所以，打错的标签可以在本地安全删除。</span><br><span class="line">&#x2F;&#x2F; 如果要推送某个标签到远程，使用命令</span><br><span class="line">git push origin &lt;tagname&gt;</span><br><span class="line"></span><br><span class="line">git push origin --tags &#x2F;&#x2F; 一次推送全部标签到远程</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 如果标签已经推送到远程，要删除远程标签就麻烦一点，先从本地删除：</span><br><span class="line">git tag -d v0.9</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 然后，从远程删除。删除命令也是push，但是格式如下：</span><br><span class="line">git push origin :refs&#x2F;tags&#x2F;v0.9</span><br></pre></td></tr></table></figure>
+
+
+            </div>
+             
+            <div class="post-footer__meta">
+    <p>
+        updated at 2021-04-18
+    </p>
+</div> 
+            <div class="post-meta__cats">
+    
+    
+        <a href="/tags/git/" class="post-tags__link button"># git</a>
+    
+        <a href="/tags/tool/" class="post-tags__link button"># tool</a>
+    
+</div> 
+        </article>
+        
+            <div class="post__comments content-card" id="comment">
+                
+    <h4>Comments</h4>
+    
+    
+    
+    
+    
+    <div id="gitalk-container"></div>
+
+    
+    
+    
+    
+
+
+            </div>
+        
+    </div>
+
+
+</main>
+
+            <footer class="footer">
+    
+
+
+    
+    
+    
+        <span id="busuanzi_container_site_uv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_uv"></span>
+            <span>Viewers</span>
+            
+                <span>&nbsp;&nbsp;&nbsp;|</span>
+            
+        </span>
+    
+    
+        <span id="busuanzi_container_site_pv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_pv"></span>
+            <span>Views</span>
+            
+        </span>
+    
+ 
+ 
+
+ 
+    
+        
+        <p class="footer-copyright">
+            Copyright&nbsp;©&nbsp;2021&nbsp;<a href="/">大白</a>
+        </p>
+    
+    
+    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme - <a href="https://github.com/ChrAlpha/hexo-theme-cards" target="_blank">Cards</a></p>
+</footer>
+
+        </div>
+        
+    <script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.1.0/dist/lazyload.min.js"></script>
+    <script>
+        window.lazyLoadOptions = {
+            elements_selector: ".lazyload",
+            threshold: 0
+        };
+    </script>
+ 
+
+ 
+    <script>
+        window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+        ga('create', 'UA-178473615-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <script async src="https://www.google-analytics.com/analytics.js"></script>
+ 
+
+ 
+
+ 
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?fb2dded415192023dd108d2b441862de';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+ 
+
+  
+
+
+
+ 
+
+
+    
+
+
+
+    
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.css">
+
+    
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.js"></script>
+
+    <script>
+        let lazyloadT = Boolean('[object Object]'),
+            auto_fancybox = Boolean('true')
+        if (auto_fancybox) {
+            $(".post__content").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        } else {
+            $(".post__content").find("fancybox").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        }
+    </script>
+ 
+
+ 
+    <script defer src="/js/b2t.js"></script>
+
+
+
+
+
+    
+
+    
+    
+    
+
+    
+    
+    
+    <script>
+        function loadComment() {
+            let e, i;
+            (e = document.createElement("script")).src = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js',
+            document.body.appendChild(e);
+            e.onload = () => {
+                var gitalk = new Gitalk({
+                    clientID: '5343251f7191333c2cf8',
+                    clientSecret: 'c0471f2aaeafdec2f9ad0edfd4df7404db114101',
+                    repo: 'big-white-2020.github.io',
+                    owner: 'big-white-2020',
+                    admin: 'big-white-2020',
+                    id: window.location.pathname,
+                    distractionFreeMode: false
+                });
+                gitalk.render('gitalk-container');
+            };
+            (i = document.createElement("link")).rel = "stylesheet",
+            i.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css',
+            document.head.appendChild(i);
+        }
+    
+        var runningOnBrowser = typeof window !== "undefined";
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+    
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var comment_observer = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) {
+                        loadComment();
+                        comment_observer.disconnect();
+                    }
+                }, { threshold: [0] });
+                comment_observer.observe(document.getElementById('comment'));
+            } else {
+                loadComment();
+            }
+        }, 1);
+    </script>
+
+    
+    
+    
+    
+    
+    
+
+    
+
+
+
+    </body>
+</html>

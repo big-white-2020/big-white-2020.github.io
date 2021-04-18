@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+
+    
+
+    <!-- 渲染优化 -->
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="HandheldFriendly" content="True" >
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!--icon-->
+
+    <link rel="shortcut icon" type='image/x-icon' href="/favicon.ico">
+
+
+    <!-- meta -->
+
+
+<title>JAVA8 新特性2 —— Stream API | 大白</title>
+
+
+    <meta name="keywords" content="JAVA, JAVA8, Stream API">
+
+
+    <!-- OpenGraph -->
+ 
+    <meta name="description" content="Steam API (java.util.stream.*) 三个步骤①：将数据源转换成流②：一系列中间操作③：产生一个新流（不改变源数据） 流（Stream）是什么？是数据渠道，用于操作数据源（集合、数组等）所生成的元素序列。**集合讲的是数据，流讲的是计算！** 注意：**①：Stream 自己不会存储元素。②：Stream 不会改变源对象。会返回一个处理后的新Stream。③：Stream">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JAVA8 新特性2 —— Stream API">
+<meta property="og:url" content="http://example.com/2020/09/13/JAVA8-Stream%20API/index.html">
+<meta property="og:site_name" content="大白">
+<meta property="og:description" content="Steam API (java.util.stream.*) 三个步骤①：将数据源转换成流②：一系列中间操作③：产生一个新流（不改变源数据） 流（Stream）是什么？是数据渠道，用于操作数据源（集合、数组等）所生成的元素序列。**集合讲的是数据，流讲的是计算！** 注意：**①：Stream 自己不会存储元素。②：Stream 不会改变源对象。会返回一个处理后的新Stream。③：Stream">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212218878.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212619241.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212600760.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212538601.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212352936.png">
+<meta property="article:published_time" content="2020-09-13T09:25:45.000Z">
+<meta property="article:modified_time" content="2021-04-18T05:59:04.454Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="JAVA">
+<meta property="article:tag" content="JAVA8">
+<meta property="article:tag" content="Stream API">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212218878.png">
+
+
+    
+<link rel="stylesheet" href="/css/style/main.css">
+ 
+
+
+    
+<link rel="stylesheet" href="/css/style/dark.css">
+
+    
+<script src="/js/darkmode.js"></script>
+
+
+
+    
+    
+        <link rel="stylesheet" id="hl-default-theme" href="/css/highlight/github.css" media="none" onload="if(getComputedStyle(document.documentElement).getPropertyValue('--color-mode').indexOf('dark')===-1)this.media='all'">
+        
+    
+
+    
+    
+
+    
+    <link rel="stylesheet" href="/css/style/note.css" media="none" onload="this.media='all'">
+
+
+     
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+ 
+
+    <!-- custom head -->
+
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+    <body>
+        <div id="app">
+            <header class="header">
+    <div class="header__left">
+        <a href="/" class="button">
+            <span class="logo__text">
+                大白
+            </span>
+        </a>
+    </div>
+    <div class="header__right">
+        
+            <div class="navbar__menus">
+                
+                    <a href="/" class="navbar-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="navbar-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="navbar-menu button">
+                        归档
+                    </a>
+                
+            </div>
+        
+        
+        
+    <a href="/search/" id="btn-search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="24" height="24" fill="currentColor" stroke="currentColor" stroke-width="32"><path d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z"></path></svg>
+    </a>
+
+
+        
+        
+    <a href="javaScript:void(0);" id="btn-toggle-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </a>
+
+
+         
+    <a href="javaScript:void(0);" id="b2t" aria-label="Back to Top" title="Back to Top">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='32' height='32' fill="currentColor" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.889,11.611c-0.17,0.17-0.443,0.17-0.612,0l-3.189-3.187l-3.363,3.36c-0.171,0.171-0.441,0.171-0.612,0c-0.172-0.169-0.172-0.443,0-0.611l3.667-3.669c0.17-0.17,0.445-0.172,0.614,0l3.496,3.493C14.058,11.167,14.061,11.443,13.889,11.611 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.692-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.383,10c0-4.07-3.312-7.382-7.383-7.382S2.618,5.93,2.618,10S5.93,17.381,10,17.381S17.383,14.07,17.383,10"></path>
+        </svg>
+    </a>
+
+
+        
+            <a class="dropdown-icon button" id="btn-dropdown">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path fill="currentColor" d="M3.314,4.8h13.372c0.41,0,0.743-0.333,0.743-0.743c0-0.41-0.333-0.743-0.743-0.743H3.314c-0.41,0-0.743,0.333-0.743,0.743C2.571,4.467,2.904,4.8,3.314,4.8z M16.686,15.2H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,15.2,16.686,15.2z M16.686,9.257H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,9.257,16.686,9.257z"></path>
+                </svg>
+            </a>
+            <div class="dropdown-menus" id="dropdown-menus">
+                <a class="dropback-icon button" id="btn-dropback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                        <path fill="currentColor" d="M11.469,10l7.08-7.08c0.406-0.406,0.406-1.064,0-1.469c-0.406-0.406-1.063-0.406-1.469,0L10,8.53l-7.081-7.08c-0.406-0.406-1.064-0.406-1.469,0c-0.406,0.406-0.406,1.063,0,1.469L8.531,10L1.45,17.081c-0.406,0.406-0.406,1.064,0,1.469c0.203,0.203,0.469,0.304,0.735,0.304c0.266,0,0.531-0.101,0.735-0.304L10,11.469l7.08,7.081c0.203,0.203,0.469,0.304,0.735,0.304c0.267,0,0.532-0.101,0.735-0.304c0.406-0.406,0.406-1.064,0-1.469L11.469,10z"></path>
+                    </svg>
+                </a>
+                
+                    <a href="/" class="dropdown-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="dropdown-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="dropdown-menu button">
+                        归档
+                    </a>
+                
+            </div>
+            <script>
+                document.getElementById('btn-dropdown').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    requestAnimationFrame(() => {
+                        dd.style.display = 'flex';
+                        requestAnimationFrame(() => {
+                            dd.style.transform = 'translateY(0)';
+                            dd.style.opacity = '1';
+                        });
+                    });
+                });
+                document.getElementById('btn-dropback').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    dd.style.transform = 'translateY(2.25rem)';                    
+                    dd.style.opacity = '0';
+                    setTimeout(() => {dd.style.display = 'none';}, 350);
+                });
+            </script>
+        
+    </div>
+</header>
+
+
+            <main class="main">
+    
+<div class="post-title">
+    <h1 class="post-title__text">
+        JAVA8 新特性2 —— Stream API
+    </h1>
+    <div class="post-title__meta">
+        <a href="/archives/2020/09/" class="post-meta__date button">
+    2020-09-13
+</a>
+        
+ 
+        
+    
+     
+    <span id="busuanzi_container_page_pv" hidden>
+        <span class="separate-dot"></span>
+        <span></span>
+        <span id="busuanzi_value_page_pv"></span>
+        <span>Views</span>
+    </span>
+
+
+
+ 
+
+ 
+    </div>
+</div>
+
+
+    <div class="post__with-side">
+        <aside class="post-side">
+            <div class="post-side__toc">
+                
+            </div>
+        </aside>
+        <article class="post content-card">
+            <div class="post__header">
+                 
+                
+            </div>
+            <div class="post__content">
+                <p>Steam API (java.util.stream.*)<br><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212218878.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212218878.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200508212218878"></p>
+<p>三个步骤<br>①：将数据源转换成流<br>②：一系列中间操作<br>③：产生一个新流（不改变源数据）</p>
+<p>流（Stream）是什么？<br>是数据渠道，用于操作数据源（集合、数组等）所生成的元素序列。<br>**<em>集合讲的是数据，流讲的是计算！**</em></p>
+<p>注意：<br>**<em>①：Stream 自己不会存储元素。<br>②：Stream 不会改变源对象。会返回一个处理后的新Stream。<br>③：Stream 操作是延迟执行的。要等到需要结果的时候才执行**</em></p>
+<p>一、创建 Stream</p>
+<p>1、可以通过Collection 系列集合提供的 stream()  (串形流) 或 parallelStream() (并行流)获取流</p>
+<pre><code>List&lt;String&gt; list = new ArrayList&lt;&gt;();
+Stream&lt;String&gt; stream = list.stream();</code></pre>
+<p> 2、通过Arrays 中的静态方法 stream() 获取数组流</p>
+<pre><code>String[] strs = new String[5]
+Stream&lt;String&gt; stream1 = Arrays.stream(strs);</code></pre>
+<p>3、通过 Stream 类中的静态方法 of()</p>
+<pre><code>Stream&lt;String&gt; stream3 = Stream.of(&quot;aa&quot;, &quot;bb&quot;, &quot;cc&quot;);</code></pre>
+<p>4、无限流</p>
+<pre><code>Stream&lt;Integer&gt; stream4 = Stream.iterate(0, (x) -&gt; x + 2);</code></pre>
+<p>此时的流是没有任何效果的，只是被创建出来了，要通过中间操作或者终止操作才有效果</p>
+<p>二、中间操作<br> <strong><em>中间操作，如果没有终止操作是不会有任何的执行</em></strong></p>
+<p>1、筛选与切片<br>    filter：接收 Lambda，从流中排除某些元素<br>    limit：截断流，使元素不超过给定数量。<br>    skip(n)：跳过元素，返回一个扔掉前 n 个元素的流，若流中不足 n 个，返回空流，与 limit 互补<br>    distinct：筛选，通过流所生成的 hashCode() 和 equals() 去除重复元素</p>
+<pre><code>// 假设有一个Person类和一个Person数组
+// 此时没有迭代，但是Stream API 会自动迭代，称为内部迭代    
+// filter 取出所有年龄大于35的
+Stream&lt;Person&gt; stream = persons.stream().filter((p) -&gt; &#123;
+    System.out.println(&quot;Stream API 的中间操作&quot;);
+    return p.getAge() &gt; 35;
+&#125;);
+
+// limit 只会取出2个年龄大于35的，找到需要的数据之后，就不继续迭代，称为“短路”，提高效率
+Stream&lt;Person&gt; stream = persons.stream().filter((p) -&gt;  p.getAge() &gt; 35).limit(2)</code></pre>
+<p>终止操作：一次性执行全部内容，叫“惰性求值”或“延时加载“</p>
+<pre><code>stream.forEach(System.out::println);</code></pre>
+<p>外部迭代</p>
+<pre><code>Iterator&lt;Person&gt; it = persons.iterator();
+while(it.hasNext())&#123;
+    System.out.println(it.next()); 
+&#125;</code></pre>
+<p>2、映射</p>
+<p>map：接收 Lambda，将元素转换成其他形式或提取信息。接收一个函数作为参数，该函数会被应用每一个元素上，并将其映射成一个新的元素。</p>
+<p>flatMap：接收一个函数作为参数，将流中的每个值都换成另一流，然后把所有流连接成一个流</p>
+<p>map 案例</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Test</span><br><span class="line">public void test()&#123;   </span><br><span class="line"></span><br><span class="line">List&lt;String&gt; stringList &#x3D; Arrays.asList(&quot;aaa&quot;, &quot;bbb&quot;, &quot;ccc&quot;);   </span><br><span class="line"></span><br><span class="line">stringList.stream()</span><br><span class="line">    .map(x -&gt; x.toUpperCase()) </span><br><span class="line">    .forEach(System.out::println);&#125;</span><br></pre></td></tr></table></figure>
+<p>输出<br><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212619241.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212619241.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200508212619241"></p>
+<p>flatMap</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Test </span><br><span class="line">public void test1()&#123;     </span><br><span class="line">List&lt;String&gt; stringList &#x3D; Arrays.asList(&quot;aaa&quot;, &quot;bbb&quot;, &quot;ccc&quot;);     stringList.stream() </span><br><span class="line">    .flatMap(StreamAPI::filterChar) </span><br><span class="line">    .forEach(System.out::println); </span><br><span class="line">    </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    </span><br><span class="line"> &#x2F;&#x2F; 将字符串变成一个一个的字符 </span><br><span class="line"> public static Stream&lt;Character&gt; filterChar(String str)&#123; </span><br><span class="line"> </span><br><span class="line"> List&lt;Character&gt; charList &#x3D; new ArrayList&lt;&gt;();     </span><br><span class="line"> for (char ch : str.toCharArray()) &#123;         </span><br><span class="line">        charList.add(ch);     </span><br><span class="line"> &#125;     </span><br><span class="line"> return charList.stream(); </span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>输出结果<br><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212600760.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212600760.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200508212600760"></p>
+<p>map 和 flatMap 有点像 List 的 add 和 addAll<br><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212538601.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212538601.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200508212538601"></p>
+<p>3、排序<br>sorted：自然排序<br>sorted(Comparator com)：订制排序</p>
+<p>三、终止操作</p>
+<p>1、查找与匹配<br>allMatch：检查是否匹配所以元素<br>anyMatch：检查是否至少匹配一个元素<br>noneMatch：检查是否没有匹配所有元素<br>findFirst：返回第一个元素<br>findAny：返回当前流的任意元素<br>count：返回流中元素的总个数<br>max：返回流中最大值<br>min：返回流中最小值</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Test</span><br><span class="line">public void test3()&#123;    </span><br><span class="line">List&lt;String&gt; list &#x3D; Arrays.asList(&quot;aaa&quot;, &quot;aaa&quot;, &quot;aaa&quot;, &quot;aaa&quot;);    List&lt;String&gt; list1 &#x3D; Arrays.asList(&quot;aaa&quot;, &quot;bbb&quot;, &quot;ccc&quot;, &quot;ddd&quot;);    boolean b &#x3D; list.stream().allMatch(x -&gt; &quot;aaa&quot;.equals(x));    System.out.println(b); </span><br><span class="line"></span><br><span class="line">boolean b1 &#x3D; list1.stream() .anyMatch(x -&gt; &quot;aaa&quot;.equals(x));    System.out.println(b1);   </span><br><span class="line"></span><br><span class="line">boolean b2 &#x3D; list1.stream()  .noneMatch(x -&gt; &quot;fff&quot;.equals(x));    System.out.println(b2);    </span><br><span class="line"></span><br><span class="line">Optional&lt;String&gt; first &#x3D; list1.stream().findFirst();    System.out.println(first);    </span><br><span class="line"></span><br><span class="line">Optional&lt;String&gt; any &#x3D; list1.stream().findAny();    System.out.println(any);&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 输出</span><br><span class="line">true</span><br><span class="line">true</span><br><span class="line">true</span><br><span class="line">Optional[aaa]</span><br><span class="line">Optional[aaa]</span><br><span class="line"></span><br><span class="line">List&lt;Integer&gt; list2 &#x3D; Arrays.asList(111, 222, 333, 444);</span><br><span class="line">long count &#x3D; list2.stream().count();</span><br><span class="line">System.out.println(count);</span><br><span class="line"></span><br><span class="line">Optional&lt;Integer&gt; max &#x3D; list2.stream().max(Integer::compareTo);</span><br><span class="line">System.out.println(max);</span><br><span class="line"></span><br><span class="line">Optional&lt;Integer&gt; min &#x3D; list2.stream().min(Integer::compareTo);</span><br><span class="line">System.out.println(min);</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 输出</span><br><span class="line">4</span><br><span class="line">Optional[444]</span><br><span class="line">Optional[111]</span><br></pre></td></tr></table></figure>
+
+<p>2、归约<br>reduce(T identity, BinaryOperator)：将流中元素反复结合起来，得到一个值</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; Person类</span><br><span class="line">@Data</span><br><span class="line">public class Person &#123;    </span><br><span class="line">private String name;    </span><br><span class="line">private Integer age;    </span><br><span class="line">private Integer salary;    </span><br><span class="line">public Person(String name, int age, int salary) &#123; </span><br><span class="line">this.name &#x3D; name;        </span><br><span class="line">this.age &#x3D; age;        </span><br><span class="line">this.salary &#x3D; salary;    </span><br><span class="line">&#125;&#125;</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; reduce</span><br><span class="line">&#x2F;&#x2F; 把0作为初始值给x, 从流中拉取一个值给y完成相加操作，操作结果再给 x,再从流中拉取一个值完成操作，依次往复。</span><br><span class="line">List&lt;Integer&gt; list &#x3D; Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9);</span><br><span class="line">Integer sum &#x3D; list.stream()</span><br><span class="line">                        .reduce(0, (x, y) -&gt; x + y);</span><br><span class="line">System.out.println(sum);</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 求person的工资总和</span><br><span class="line"></span><br><span class="line">Optional&lt;Integer&gt; reduce &#x3D; people.stream()</span><br><span class="line">    .map(Person::getSalary)</span><br><span class="line">    .reduce(Integer::sum);</span><br><span class="line">System.out.println(reduce.get());</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 这种 map 与 reduce 连接的模式，可以成为 map-reduce 模式 </span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 输出</span><br><span class="line">45</span><br><span class="line">27000</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>3、收集<br>collect：将流转换成其他形式，接收一个Collector接口实现，用于给Stream中元素做汇总的方法。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x2F;&#x2F; 收集成list</span><br><span class="line">List&lt;String&gt; collect &#x3D; people.stream()       </span><br><span class="line">    .map(Person::getName)       </span><br><span class="line">    .collect(Collectors.toList());</span><br><span class="line">    </span><br><span class="line"> Set&lt;String&gt; set &#x3D; people.stream()</span><br><span class="line">        .map(Person::getName)        </span><br><span class="line">        .collect(Collectors.toSet());</span><br><span class="line">        </span><br><span class="line">&#x2F;&#x2F; 收集成其他集合类型</span><br><span class="line">LinkedList&lt;String&gt; linkedList &#x3D; people.stream()</span><br><span class="line">            .map(Person::getName) </span><br><span class="line">            .collect(Collectors.toCollection(LinkedList::new));</span><br><span class="line">            </span><br><span class="line"> &#x2F;&#x2F; 工资平均值</span><br><span class="line"> Double avg &#x3D; people.stream()</span><br><span class="line">            .collect(Collectors.averagingInt(Person::getSalary));</span><br><span class="line">            </span><br><span class="line">&#x2F;&#x2F; 求年龄最大的Person</span><br><span class="line">Optional&lt;Person&gt; maxByAge &#x3D; people.stream()</span><br><span class="line">    .collect(Collectors.maxBy((p1, p2) -&gt; p1.getAge().compareTo(p2.getSalary())));</span><br><span class="line">    </span><br><span class="line"> &#x2F;&#x2F; 分组</span><br><span class="line"> Map&lt;Integer, List&lt;Person&gt;&gt; groupByAge &#x3D; people.stream()</span><br><span class="line">        .collect(Collectors.groupingBy(Person::getAge));</span><br><span class="line">        </span><br><span class="line">&#x2F;&#x2F; 多级分组,先按年龄再按工资分组</span><br><span class="line">Map&lt;Integer, Map&lt;Integer, List&lt;Person&gt;&gt;&gt; collect1 &#x3D; people.stream()</span><br><span class="line">        .collect(Collectors.groupingBy(Person::getAge,</span><br><span class="line">Collectors.groupingBy(Person::getSalary)));</span><br><span class="line"></span><br><span class="line">&#x2F;&#x2F; 分区, 按年龄18为分区标准</span><br><span class="line">Map&lt;Boolean, List&lt;Person&gt;&gt; collect2 &#x3D; people.stream()</span><br><span class="line">        .collect(Collectors.partitioningBy(p -&gt; p.getAge() &gt; 18));</span><br><span class="line">        </span><br><span class="line">&#x2F;&#x2F; 连接</span><br><span class="line">&#x2F;&#x2F; 结果：***zhangsan,lisi,wangwu,zhaoliu,tianqi***</span><br><span class="line">String collect3 &#x3D; people.stream()</span><br><span class="line">        .map(Person::getName)</span><br><span class="line">        .collect(Collectors.joining(&quot;,&quot;, &quot;***&quot;, &quot;***&quot;));</span><br><span class="line">System.out.println(collect3);</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212352936.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508212352936.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200508212352936"></p>
+
+            </div>
+             
+            <div class="post-footer__meta">
+    <p>
+        updated at 2021-04-18
+    </p>
+</div> 
+            <div class="post-meta__cats">
+    
+    
+        <a href="/tags/JAVA/" class="post-tags__link button"># JAVA</a>
+    
+        <a href="/tags/JAVA8/" class="post-tags__link button"># JAVA8</a>
+    
+        <a href="/tags/Stream-API/" class="post-tags__link button"># Stream API</a>
+    
+</div> 
+        </article>
+        
+            <div class="post__comments content-card" id="comment">
+                
+    <h4>Comments</h4>
+    
+    
+    
+    
+    
+    <div id="gitalk-container"></div>
+
+    
+    
+    
+    
+
+
+            </div>
+        
+    </div>
+
+
+</main>
+
+            <footer class="footer">
+    
+
+
+    
+    
+    
+        <span id="busuanzi_container_site_uv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_uv"></span>
+            <span>Viewers</span>
+            
+                <span>&nbsp;&nbsp;&nbsp;|</span>
+            
+        </span>
+    
+    
+        <span id="busuanzi_container_site_pv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_pv"></span>
+            <span>Views</span>
+            
+        </span>
+    
+ 
+ 
+
+ 
+    
+        
+        <p class="footer-copyright">
+            Copyright&nbsp;©&nbsp;2021&nbsp;<a href="/">大白</a>
+        </p>
+    
+    
+    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme - <a href="https://github.com/ChrAlpha/hexo-theme-cards" target="_blank">Cards</a></p>
+</footer>
+
+        </div>
+        
+    <script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.1.0/dist/lazyload.min.js"></script>
+    <script>
+        window.lazyLoadOptions = {
+            elements_selector: ".lazyload",
+            threshold: 0
+        };
+    </script>
+ 
+
+ 
+    <script>
+        window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+        ga('create', 'UA-178473615-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <script async src="https://www.google-analytics.com/analytics.js"></script>
+ 
+
+ 
+
+ 
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?fb2dded415192023dd108d2b441862de';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+ 
+
+  
+
+
+
+ 
+
+
+    
+
+
+
+    
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.css">
+
+    
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.js"></script>
+
+    <script>
+        let lazyloadT = Boolean('[object Object]'),
+            auto_fancybox = Boolean('true')
+        if (auto_fancybox) {
+            $(".post__content").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        } else {
+            $(".post__content").find("fancybox").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        }
+    </script>
+ 
+
+ 
+    <script defer src="/js/b2t.js"></script>
+
+
+
+
+
+    
+
+    
+    
+    
+
+    
+    
+    
+    <script>
+        function loadComment() {
+            let e, i;
+            (e = document.createElement("script")).src = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js',
+            document.body.appendChild(e);
+            e.onload = () => {
+                var gitalk = new Gitalk({
+                    clientID: '5343251f7191333c2cf8',
+                    clientSecret: 'c0471f2aaeafdec2f9ad0edfd4df7404db114101',
+                    repo: 'big-white-2020.github.io',
+                    owner: 'big-white-2020',
+                    admin: 'big-white-2020',
+                    id: window.location.pathname,
+                    distractionFreeMode: false
+                });
+                gitalk.render('gitalk-container');
+            };
+            (i = document.createElement("link")).rel = "stylesheet",
+            i.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css',
+            document.head.appendChild(i);
+        }
+    
+        var runningOnBrowser = typeof window !== "undefined";
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+    
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var comment_observer = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) {
+                        loadComment();
+                        comment_observer.disconnect();
+                    }
+                }, { threshold: [0] });
+                comment_observer.observe(document.getElementById('comment'));
+            } else {
+                loadComment();
+            }
+        }, 1);
+    </script>
+
+    
+    
+    
+    
+    
+    
+
+    
+
+
+
+    </body>
+</html>

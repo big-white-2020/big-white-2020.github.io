@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+
+    
+
+    <!-- 渲染优化 -->
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="HandheldFriendly" content="True" >
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!--icon-->
+
+    <link rel="shortcut icon" type='image/x-icon' href="/favicon.ico">
+
+
+    <!-- meta -->
+
+
+<title>JAVA NIO | 大白</title>
+
+
+    <meta name="keywords" content="JAVA, NIO, 并发">
+
+
+    <!-- OpenGraph -->
+ 
+    <meta name="description" content="直接内存，间接内存&amp;#8195;java.nio 从 Java 1.4开始引入，可以叫New I&#x2F;O，也可叫Non-Blocking I&#x2F;O。java.nio 有三个核心概念Selector、Channel、Buffer，在java.nio中我们是面向块（block）或者缓冲区（buffer）编程，而不是像 java.io 中的面向流编程。buffer 是内存中的一块区域，底层的实现是数组，所有数">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JAVA NIO">
+<meta property="og:url" content="http://example.com/2020/09/13/Java%20NIO/index.html">
+<meta property="og:site_name" content="大白">
+<meta property="og:description" content="直接内存，间接内存&amp;#8195;java.nio 从 Java 1.4开始引入，可以叫New I&#x2F;O，也可叫Non-Blocking I&#x2F;O。java.nio 有三个核心概念Selector、Channel、Buffer，在java.nio中我们是面向块（block）或者缓冲区（buffer）编程，而不是像 java.io 中的面向流编程。buffer 是内存中的一块区域，底层的实现是数组，所有数">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213658067.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213713359.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213733285.png">
+<meta property="article:published_time" content="2020-09-13T11:44:09.000Z">
+<meta property="article:modified_time" content="2021-04-18T05:59:04.454Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="JAVA">
+<meta property="article:tag" content="NIO">
+<meta property="article:tag" content="并发">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213658067.png">
+
+
+    
+<link rel="stylesheet" href="/css/style/main.css">
+ 
+
+
+    
+<link rel="stylesheet" href="/css/style/dark.css">
+
+    
+<script src="/js/darkmode.js"></script>
+
+
+
+    
+    
+        <link rel="stylesheet" id="hl-default-theme" href="/css/highlight/github.css" media="none" onload="if(getComputedStyle(document.documentElement).getPropertyValue('--color-mode').indexOf('dark')===-1)this.media='all'">
+        
+    
+
+    
+    
+
+    
+    <link rel="stylesheet" href="/css/style/note.css" media="none" onload="this.media='all'">
+
+
+     
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+ 
+
+    <!-- custom head -->
+
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+    <body>
+        <div id="app">
+            <header class="header">
+    <div class="header__left">
+        <a href="/" class="button">
+            <span class="logo__text">
+                大白
+            </span>
+        </a>
+    </div>
+    <div class="header__right">
+        
+            <div class="navbar__menus">
+                
+                    <a href="/" class="navbar-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="navbar-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="navbar-menu button">
+                        归档
+                    </a>
+                
+            </div>
+        
+        
+        
+    <a href="/search/" id="btn-search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="24" height="24" fill="currentColor" stroke="currentColor" stroke-width="32"><path d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z"></path></svg>
+    </a>
+
+
+        
+        
+    <a href="javaScript:void(0);" id="btn-toggle-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </a>
+
+
+         
+    <a href="javaScript:void(0);" id="b2t" aria-label="Back to Top" title="Back to Top">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='32' height='32' fill="currentColor" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.889,11.611c-0.17,0.17-0.443,0.17-0.612,0l-3.189-3.187l-3.363,3.36c-0.171,0.171-0.441,0.171-0.612,0c-0.172-0.169-0.172-0.443,0-0.611l3.667-3.669c0.17-0.17,0.445-0.172,0.614,0l3.496,3.493C14.058,11.167,14.061,11.443,13.889,11.611 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.692-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.383,10c0-4.07-3.312-7.382-7.383-7.382S2.618,5.93,2.618,10S5.93,17.381,10,17.381S17.383,14.07,17.383,10"></path>
+        </svg>
+    </a>
+
+
+        
+            <a class="dropdown-icon button" id="btn-dropdown">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path fill="currentColor" d="M3.314,4.8h13.372c0.41,0,0.743-0.333,0.743-0.743c0-0.41-0.333-0.743-0.743-0.743H3.314c-0.41,0-0.743,0.333-0.743,0.743C2.571,4.467,2.904,4.8,3.314,4.8z M16.686,15.2H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,15.2,16.686,15.2z M16.686,9.257H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,9.257,16.686,9.257z"></path>
+                </svg>
+            </a>
+            <div class="dropdown-menus" id="dropdown-menus">
+                <a class="dropback-icon button" id="btn-dropback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                        <path fill="currentColor" d="M11.469,10l7.08-7.08c0.406-0.406,0.406-1.064,0-1.469c-0.406-0.406-1.063-0.406-1.469,0L10,8.53l-7.081-7.08c-0.406-0.406-1.064-0.406-1.469,0c-0.406,0.406-0.406,1.063,0,1.469L8.531,10L1.45,17.081c-0.406,0.406-0.406,1.064,0,1.469c0.203,0.203,0.469,0.304,0.735,0.304c0.266,0,0.531-0.101,0.735-0.304L10,11.469l7.08,7.081c0.203,0.203,0.469,0.304,0.735,0.304c0.267,0,0.532-0.101,0.735-0.304c0.406-0.406,0.406-1.064,0-1.469L11.469,10z"></path>
+                    </svg>
+                </a>
+                
+                    <a href="/" class="dropdown-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="dropdown-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="dropdown-menu button">
+                        归档
+                    </a>
+                
+            </div>
+            <script>
+                document.getElementById('btn-dropdown').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    requestAnimationFrame(() => {
+                        dd.style.display = 'flex';
+                        requestAnimationFrame(() => {
+                            dd.style.transform = 'translateY(0)';
+                            dd.style.opacity = '1';
+                        });
+                    });
+                });
+                document.getElementById('btn-dropback').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    dd.style.transform = 'translateY(2.25rem)';                    
+                    dd.style.opacity = '0';
+                    setTimeout(() => {dd.style.display = 'none';}, 350);
+                });
+            </script>
+        
+    </div>
+</header>
+
+
+            <main class="main">
+    
+<div class="post-title">
+    <h1 class="post-title__text">
+        JAVA NIO
+    </h1>
+    <div class="post-title__meta">
+        <a href="/archives/2020/09/" class="post-meta__date button">
+    2020-09-13
+</a>
+        
+ 
+        
+    
+     
+    <span id="busuanzi_container_page_pv" hidden>
+        <span class="separate-dot"></span>
+        <span></span>
+        <span id="busuanzi_value_page_pv"></span>
+        <span>Views</span>
+    </span>
+
+
+
+ 
+
+ 
+    </div>
+</div>
+
+
+    <div class="post__with-side">
+        <aside class="post-side">
+            <div class="post-side__toc">
+                <ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#Buffer"><span class="toc-number">1.</span> <span class="toc-text">Buffer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#flip-%E6%96%B9%E6%B3%95"><span class="toc-number">2.</span> <span class="toc-text">flip() 方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#clear-%E6%96%B9%E6%B3%95"><span class="toc-number">3.</span> <span class="toc-text">clear() 方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%BA%95%E5%B1%82%E6%95%B0%E7%BB%84-slice-%E5%85%B1%E4%BA%AB%E7%9B%B8%E5%90%8C%E7%9A%84%E6%95%B0%E7%BB%84"><span class="toc-number">4.</span> <span class="toc-text">共享底层数组 slice 共享相同的数组</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%9B%B4%E6%8E%A5%E7%BC%93%E5%86%B2%E5%92%8C%E9%9B%B6%E6%8B%B7%E8%B4%9D-DirectBuffer"><span class="toc-number">5.</span> <span class="toc-text">直接缓冲和零拷贝 DirectBuffer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E6%96%87%E4%BB%B6-MappedByteBuffer"><span class="toc-number">6.</span> <span class="toc-text">内存映射文件 MappedByteBuffer</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%85%B3%E4%BA%8E-Buffer-%E7%9A%84-Scattering%EF%BC%88%E5%88%86%E6%95%A3%EF%BC%89%E5%92%8C-Gathering%EF%BC%88%E6%94%B6%E9%9B%86%EF%BC%89"><span class="toc-number">7.</span> <span class="toc-text">关于 Buffer 的 Scattering（分散）和 Gathering（收集）</span></a></li></ol>
+            </div>
+        </aside>
+        <article class="post content-card">
+            <div class="post__header">
+                 
+                
+            </div>
+            <div class="post__content">
+                <p>直接内存，间接内存<br>&#8195;java.nio 从 Java 1.4开始引入，可以叫New I/O，也可叫Non-Blocking I/O。java.nio 有三个核心概念Selector、Channel、Buffer，在java.nio中我们是面向块（block）或者缓冲区（buffer）编程，而不是像 java.io 中的面向流编程。buffer 是内存中的一块区域，底层的实现是数组，所有数据的读或者写都是通过 buffer 来实现。</p>
+<p>&#8195;对于Java的8中基本数据类型都有（除了 Boolean）对应的 Buffer 类型，如 ByteBuffer、CharBuffer、IntBuffer 等<br>&#8195;Channel 是指可以写入或者读取数据的对象，类似于 java.io 中的 Stream，不过 Channel 是双向的，可以进行读写。但是所有的读写操作都是通过 Buffer 进行，不会直接通过 Channel 读写数据。</p>
+<h4 id="Buffer"><a href="#Buffer" class="headerlink" title="Buffer"></a>Buffer</h4><p>&#8195;Buffer 中有几个重要的属性 mark、position、limit、capacity，其中 0 &lt;= mark &lt;= position &lt;= limit &lt;= capacity。<br>&#8195;capacity 表示缓冲区 Buffer 的容量，不能为负数。limit 为缓冲区的限制，不能为负，限制代表缓冲区中第一个不能读取或者写入元素的索引（下标）。<br><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213658067.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213658067.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200508213658067"><br>&#8195;position 代表下一个要读取或者写入元素的索引（下标），不能为负。<br><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213713359.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213713359.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200508213713359"><br>&#8195;mark 表示缓冲区的标记，标记的作用是调用 reset() 方法时，会将 position 位置重置到 mark 位置，标记不是必须的，而且标记不能大于 position，如果定义了 mark ，再将 position 或 limit 重置到比 mark 小的位置时会丢弃 mark，将 mark 置为 -1。如果未定义 mark 在调用 reset() 方法时会抛出 InvalidMarkException 异常。<br>总结：<br> 1 ）缓冲区的 capacity 不能为负数，缓冲区的 limit 不能为负数，缓冲区的 position 不能<br>为负数 。<br>2) position 不能大于其 limit 。<br>3) limit 不能大于其 capacity 。<br>4 ）如果定义了 mark ，则在将 position 或 limit 调整为小于该 mark 的值时，该 mark 被<br>丢弃 。<br>5 ）如果未定义 mark ，那么调用 reset（） 方法将导致抛出 InvalidMarkException 异常 。<br>6 ）如果 position 大于新的 limit ，则 position 的值就是新 limit 的值 。<br>7 ）当 limit 和 position 值一样时，在指定的 position 写入数据时会 出现异常，因为此位<br>置是被限制的 。</p>
+<h4 id="flip-方法"><a href="#flip-方法" class="headerlink" title="flip() 方法"></a>flip() 方法</h4><p>例子：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">FileInputStream fileInputStream &#x3D; new FileInputStream(&quot;niotest1.txt&quot;);</span><br><span class="line">FileChannel channel &#x3D; fileInputStream.getChannel();</span><br><span class="line"></span><br><span class="line">ByteBuffer buffer &#x3D; ByteBuffer.allocate(512);</span><br><span class="line">channel.read(buffer);</span><br><span class="line"></span><br><span class="line">buffer.flip();</span><br><span class="line"></span><br><span class="line">while (buffer.hasRemaining())&#123;</span><br><span class="line">    System.out.println((char) buffer.get());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>上述例子中，将 niotest1.txt 读入 buffer 后进行了一次 flip 操作，下面是 flip 方法的源码。flip 操作将 limit 设置为当前的 position，下次读取操作时就不会超过赋值的界限，保证读取的数据都是有效的。然后 position 设置为 0，下次读取时能从下标 0 开始读，mark 设置为 -1</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public final Buffer flip() &#123;</span><br><span class="line">    limit &#x3D; position;</span><br><span class="line">    position &#x3D; 0;</span><br><span class="line">    mark &#x3D; -1;</span><br><span class="line">    return this;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="clear-方法"><a href="#clear-方法" class="headerlink" title="clear() 方法"></a>clear() 方法</h4><p>&#8195;clear 方法只是将 limit 设置为 capacity，position 设置为 0，并没有将数据删除，而只是将 buffer 数组设置为初始状态，下次写操作时直接覆盖，而读操作可以把原来的数据读出来。下面是 clear 方法的源码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public final Buffer clear() &#123;</span><br><span class="line">    position &#x3D; 0;</span><br><span class="line">    limit &#x3D; capacity;</span><br><span class="line">    mark &#x3D; -1;</span><br><span class="line">    return this;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>相对位置和绝对位置<br>ByteBuffer 类型化 put 和 get方法<br>就是，将其他类型 put 进 ByteBuffer，但是，put 什么类型，get 就是什么类型，顺序不能变。</p>
+<h4 id="共享底层数组-slice-共享相同的数组"><a href="#共享底层数组-slice-共享相同的数组" class="headerlink" title="共享底层数组 slice 共享相同的数组"></a>共享底层数组 slice 共享相同的数组</h4><h4 id="直接缓冲和零拷贝-DirectBuffer"><a href="#直接缓冲和零拷贝-DirectBuffer" class="headerlink" title="直接缓冲和零拷贝 DirectBuffer"></a>直接缓冲和零拷贝 DirectBuffer</h4><p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213733285.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20200508213733285.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20200508213733285"></p>
+<h4 id="内存映射文件-MappedByteBuffer"><a href="#内存映射文件-MappedByteBuffer" class="headerlink" title="内存映射文件 MappedByteBuffer"></a>内存映射文件 MappedByteBuffer</h4><p>将文件的全部或者一部分映射到堆外内存中，Java即可以直接操作内存，而不用操作文件，减少I/O操作，提升操作效率</p>
+<h4 id="关于-Buffer-的-Scattering（分散）和-Gathering（收集）"><a href="#关于-Buffer-的-Scattering（分散）和-Gathering（收集）" class="headerlink" title="关于 Buffer 的 Scattering（分散）和 Gathering（收集）"></a>关于 Buffer 的 Scattering（分散）和 Gathering（收集）</h4><p>Scattering 是指在使用 Channel 进行读取的时候，如果我们传入的是一个 buffer 数组，那么会将第一个 buffer 读满后再读入第二个 buffer 依次进行。<br>Gathering 是指写出的时候传入一个 buffer 数组，会将第一个 buffer 全部写出，再将第二个 buffer 全部写出，依次进行。</p>
+<p>unicode 是编码方式<br>utf 是存储方式<br>utf-8 是unicode的实现方式</p>
+
+            </div>
+             
+            <div class="post-footer__meta">
+    <p>
+        updated at 2021-04-18
+    </p>
+</div> 
+            <div class="post-meta__cats">
+    
+    
+        <a href="/tags/JAVA/" class="post-tags__link button"># JAVA</a>
+    
+        <a href="/tags/NIO/" class="post-tags__link button"># NIO</a>
+    
+        <a href="/tags/%E5%B9%B6%E5%8F%91/" class="post-tags__link button"># 并发</a>
+    
+</div> 
+        </article>
+        
+            <div class="post__comments content-card" id="comment">
+                
+    <h4>Comments</h4>
+    
+    
+    
+    
+    
+    <div id="gitalk-container"></div>
+
+    
+    
+    
+    
+
+
+            </div>
+        
+    </div>
+
+
+</main>
+
+            <footer class="footer">
+    
+
+
+    
+    
+    
+        <span id="busuanzi_container_site_uv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_uv"></span>
+            <span>Viewers</span>
+            
+                <span>&nbsp;&nbsp;&nbsp;|</span>
+            
+        </span>
+    
+    
+        <span id="busuanzi_container_site_pv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_pv"></span>
+            <span>Views</span>
+            
+        </span>
+    
+ 
+ 
+
+ 
+    
+        
+        <p class="footer-copyright">
+            Copyright&nbsp;©&nbsp;2021&nbsp;<a href="/">大白</a>
+        </p>
+    
+    
+    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme - <a href="https://github.com/ChrAlpha/hexo-theme-cards" target="_blank">Cards</a></p>
+</footer>
+
+        </div>
+        
+    <script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.1.0/dist/lazyload.min.js"></script>
+    <script>
+        window.lazyLoadOptions = {
+            elements_selector: ".lazyload",
+            threshold: 0
+        };
+    </script>
+ 
+
+ 
+    <script>
+        window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+        ga('create', 'UA-178473615-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <script async src="https://www.google-analytics.com/analytics.js"></script>
+ 
+
+ 
+
+ 
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?fb2dded415192023dd108d2b441862de';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+ 
+
+  
+
+
+
+ 
+
+
+    
+
+
+
+    
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.css">
+
+    
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.js"></script>
+
+    <script>
+        let lazyloadT = Boolean('[object Object]'),
+            auto_fancybox = Boolean('true')
+        if (auto_fancybox) {
+            $(".post__content").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        } else {
+            $(".post__content").find("fancybox").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        }
+    </script>
+ 
+
+ 
+    <script defer src="/js/b2t.js"></script>
+
+
+
+
+
+    
+
+    
+    
+    
+
+    
+    
+    
+    <script>
+        function loadComment() {
+            let e, i;
+            (e = document.createElement("script")).src = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js',
+            document.body.appendChild(e);
+            e.onload = () => {
+                var gitalk = new Gitalk({
+                    clientID: '5343251f7191333c2cf8',
+                    clientSecret: 'c0471f2aaeafdec2f9ad0edfd4df7404db114101',
+                    repo: 'big-white-2020.github.io',
+                    owner: 'big-white-2020',
+                    admin: 'big-white-2020',
+                    id: window.location.pathname,
+                    distractionFreeMode: false
+                });
+                gitalk.render('gitalk-container');
+            };
+            (i = document.createElement("link")).rel = "stylesheet",
+            i.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css',
+            document.head.appendChild(i);
+        }
+    
+        var runningOnBrowser = typeof window !== "undefined";
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+    
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var comment_observer = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) {
+                        loadComment();
+                        comment_observer.disconnect();
+                    }
+                }, { threshold: [0] });
+                comment_observer.observe(document.getElementById('comment'));
+            } else {
+                loadComment();
+            }
+        }, 1);
+    </script>
+
+    
+    
+    
+    
+    
+    
+
+    
+
+
+
+    </body>
+</html>
