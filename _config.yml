@@ -118,6 +118,6 @@ deploy:
 - type: git
   repo: 
     github: git@github.com:big-white-2020/big-white-2020.github.io.git
-    gitee: git@gitee.com:liyajun2018/liyajun2018.git
+#    gitee: git@gitee.com:liyajun2018/liyajun2018.git
   branch : master
   message: Site update ({{ now('YYYY-MM-DD HH:mm:ss') }})
