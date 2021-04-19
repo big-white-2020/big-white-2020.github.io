@@ -21,18 +21,26 @@
     <!-- meta -->
 
 
-<title>大白</title>
+<title>Spark DataFrame 自增 ID | 大白</title>
 
+
+    <meta name="keywords" content="Spark, DataFrame">
 
 
     <!-- OpenGraph -->
  
-    <meta property="og:type" content="website">
-<meta property="og:title" content="大白">
-<meta property="og:url" content="http://example.com/page/2/index.html">
+    <meta name="description" content="Spark 添加一列自增 ID 有两种方式，一种是通过 Spark SQL 的窗口函数，另一种是通过 RDD 的 zipWithIndex 算子。 案例： val seq &#x3D; Range(1, 100, 2)        val dataFrame &#x3D; seq.toDF(&quot;index&quot;)        dataFrame.show(10)&#96;  输出： +-----+|inde">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark DataFrame 自增 ID">
+<meta property="og:url" content="http://example.com/2021/04/19/Spark-increment-id/index.html">
 <meta property="og:site_name" content="大白">
+<meta property="og:description" content="Spark 添加一列自增 ID 有两种方式，一种是通过 Spark SQL 的窗口函数，另一种是通过 RDD 的 zipWithIndex 算子。 案例： val seq &#x3D; Range(1, 100, 2)        val dataFrame &#x3D; seq.toDF(&quot;index&quot;)        dataFrame.show(10)&#96;  输出： +-----+|inde">
 <meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-04-19T04:42:25.000Z">
+<meta property="article:modified_time" content="2021-04-19T15:07:08.100Z">
 <meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Spark">
+<meta property="article:tag" content="DataFrame">
 <meta name="twitter:card" content="summary_large_image">
 
 
@@ -50,6 +58,11 @@
 
 
     
+    
+        <link rel="stylesheet" id="hl-default-theme" href="/css/highlight/github.css" media="none" onload="if(getComputedStyle(document.documentElement).getPropertyValue('--color-mode').indexOf('dark')===-1)this.media='all'">
+        
+    
+
     
     
 
@@ -164,134 +177,108 @@
 </header>
 
 
-    <div class="cover">
-        <div class="cover__logo">
-            
-                <h1>即要仰望星空，也要低头看路，早日从小白变成大白！</h1>
-            
-        </div>
-        
-    </div>
-
             <main class="main">
     
-    <div class="posts">
+<div class="post-title">
+    <h1 class="post-title__text">
+        Spark DataFrame 自增 ID
+    </h1>
+    <div class="post-title__meta">
+        <a href="/archives/2021/04/" class="post-meta__date button">
+    2021-04-19
+</a>
         
-            
-                <div class='post-entry content-card'>
-                    <div class="post-entry__header">
-     
-</div>
-<div class="post-entry__content">
-    <h2 class="post-entry__title">
-        JAVA8 新特性2 —— Stream API
-    </h2>
-    
-        <p>
-            Steam API (java.util.stream.*)
-        </p>
-    
-</div>
-<div class="post-entry__meta">
-    <a href="/archives/2020/09/" class="post-meta__date button">
-    2020-09-13
-</a>
-    
  
+        
+    
+     
+    <span id="busuanzi_container_page_pv" hidden>
+        <span class="separate-dot"></span>
+        <span></span>
+        <span id="busuanzi_value_page_pv"></span>
+        <span>Views</span>
+    </span>
+
+
+
+ 
+
+ 
+    </div>
 </div>
-<div class="post-entry__tags">
+
+
+    <div class="post__with-side">
+        <aside class="post-side">
+            <div class="post-side__toc">
+                
+            </div>
+        </aside>
+        <article class="post content-card">
+            <div class="post__header">
+                 
+                
+            </div>
+            <div class="post__content">
+                <p>Spark 添加一列自增 ID 有两种方式，一种是通过 Spark SQL 的窗口函数，另一种是通过 RDD 的 <code>zipWithIndex</code> 算子。</p>
+<p>案例：</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> seq = <span class="type">Range</span>(<span class="number">1</span>, <span class="number">100</span>, <span class="number">2</span>)</span><br><span class="line">        <span class="keyword">val</span> dataFrame = seq.toDF(<span class="string">&quot;index&quot;</span>)</span><br><span class="line">        dataFrame.show(<span class="number">10</span>)`</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">+-----+</span><br><span class="line">|index|</span><br><span class="line">+-----+</span><br><span class="line">|    1|</span><br><span class="line">|    3|</span><br><span class="line">|    5|</span><br><span class="line">|    7|</span><br><span class="line">|    9|</span><br><span class="line">|   11|</span><br><span class="line">|   13|</span><br><span class="line">|   15|</span><br><span class="line">|   17|</span><br><span class="line">|   19|</span><br><span class="line">+-----+</span><br></pre></td></tr></table></figure>
+
+<p>窗口函数方式：</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> spec = <span class="type">Window</span>.partitionBy().orderBy(<span class="string">&quot;index&quot;</span>)</span><br><span class="line">dataFrame.withColumn(<span class="string">&quot;id&quot;</span>, row_number().over(spec)).show(<span class="number">10</span>)</span><br></pre></td></tr></table></figure>
+
+<p>输出：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">+-----+---+</span><br><span class="line">|index| id|</span><br><span class="line">+-----+---+</span><br><span class="line">|    1|  1|</span><br><span class="line">|    3|  2|</span><br><span class="line">|    5|  3|</span><br><span class="line">|    7|  4|</span><br><span class="line">|    9|  5|</span><br><span class="line">|   11|  6|</span><br><span class="line">|   13|  7|</span><br><span class="line">|   15|  8|</span><br><span class="line">|   17|  9|</span><br><span class="line">|   19| 10|</span><br><span class="line">+-----+---+</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>zipWithIndex</code> 算子方式：</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">dataFrame.rdd.zipWithIndex()</span><br><span class="line">	.map&#123;<span class="keyword">case</span>(x, y) =&gt; (x, y + <span class="number">1</span>)&#125;</span><br><span class="line">	.take(<span class="number">10</span>)</span><br><span class="line">	.map(println)</span><br></pre></td></tr></table></figure>
+
+<p> 输出：</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">([1],1)</span><br><span class="line">([3],2)</span><br><span class="line">([5],3)</span><br><span class="line">([7],4)</span><br><span class="line">([9],5)</span><br><span class="line">([11],6)</span><br><span class="line">([13],7)</span><br><span class="line">([15],8)</span><br><span class="line">([17],9)</span><br><span class="line">([19],10)</span><br></pre></td></tr></table></figure>
+
+<p>上面 <code>.map&#123;case(x, y) =&gt; (x, y + 1)&#125;</code> 的作用是让 id 初始值为 1</p>
+
+            </div>
+             
+            <div class="post-footer__meta">
+    <p>
+        updated at 2021-04-19
+    </p>
+</div> 
+            <div class="post-meta__cats">
     
-        <a href="/tags/JAVA/" class="post-tags__link button"># JAVA</a>
     
-        <a href="/tags/JAVA8/" class="post-tags__link button"># JAVA8</a>
+        <a href="/tags/Spark/" class="post-tags__link button"># Spark</a>
     
-        <a href="/tags/Stream-API/" class="post-tags__link button"># Stream API</a>
+        <a href="/tags/DataFrame/" class="post-tags__link button"># DataFrame</a>
     
 </div> 
-<a href="/2020/09/13/JAVA8-Stream%20API/" class="post-entry__link">Link</a>
-                </div>
-            
-                <div class='post-entry content-card'>
-                    <div class="post-entry__header">
-     
-</div>
-<div class="post-entry__content">
-    <h2 class="post-entry__title">
-        ArrayList 源码解析
-    </h2>
+        </article>
+        
+            <div class="post__comments content-card" id="comment">
+                
+    <h4>Comments</h4>
     
-        <p>
-            首先存储的数据结构为：transient Object[] elementData;
-构造方法构造方法有三...
-        </p>
     
-</div>
-<div class="post-entry__meta">
-    <a href="/archives/2020/09/" class="post-meta__date button">
-    2020-09-13
-</a>
     
- 
-</div>
-<div class="post-entry__tags">
     
-        <a href="/tags/JAVA/" class="post-tags__link button"># JAVA</a>
     
-        <a href="/tags/ArrayList/" class="post-tags__link button"># ArrayList</a>
+    <div id="gitalk-container"></div>
+
     
-        <a href="/tags/%E9%9B%86%E5%90%88/" class="post-tags__link button"># 集合</a>
     
-        <a href="/tags/%E6%BA%90%E7%A0%81/" class="post-tags__link button"># 源码</a>
     
-</div> 
-<a href="/2020/09/13/ArrayList/" class="post-entry__link">Link</a>
-                </div>
-            
-                <div class='post-entry content-card'>
-                    <div class="post-entry__header">
-     
-</div>
-<div class="post-entry__content">
-    <h2 class="post-entry__title">
-        Redis 基本数据结构
-    </h2>
     
-        <p>
-            字符串Redis 没有使用 C 语言原生的字符串，而是重新定义了一种数据结构——SDS（Simple Dynamic String）简单动态字符串，数据...
-        </p>
-    
-</div>
-<div class="post-entry__meta">
-    <a href="/archives/2020/09/" class="post-meta__date button">
-    2020-09-12
-</a>
-    
- 
-</div>
-<div class="post-entry__tags">
-    
-        <a href="/tags/Reids/" class="post-tags__link button"># Reids</a>
-    
-</div> 
-<a href="/2020/09/12/redis-baseDataConstruct/" class="post-entry__link">Link</a>
-                </div>
-            
+
+
+            </div>
         
     </div>
-    
-        
-            <nav role="navigation" aria-label="Pagination Navigation">
-                
-                    <div class="pagination_prev">
-                        <a href="/" class="button">
-                            &lt;&nbsp;Previous
-                        </a>
-                    </div>
-                
-                
-            </nav>
-        
-    
 
 
 </main>
@@ -421,6 +408,65 @@
 
 
 
+
+    
+
+    
+    
+    
+
+    
+    
+    
+    <script>
+        function loadComment() {
+            let e, i;
+            (e = document.createElement("script")).src = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js',
+            document.body.appendChild(e);
+            e.onload = () => {
+                var gitalk = new Gitalk({
+                    clientID: '5343251f7191333c2cf8',
+                    clientSecret: 'c0471f2aaeafdec2f9ad0edfd4df7404db114101',
+                    repo: 'big-white-2020.github.io',
+                    owner: 'big-white-2020',
+                    admin: 'big-white-2020',
+                    id: window.location.pathname,
+                    distractionFreeMode: false
+                });
+                gitalk.render('gitalk-container');
+            };
+            (i = document.createElement("link")).rel = "stylesheet",
+            i.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css',
+            document.head.appendChild(i);
+        }
+    
+        var runningOnBrowser = typeof window !== "undefined";
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+    
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var comment_observer = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) {
+                        loadComment();
+                        comment_observer.disconnect();
+                    }
+                }, { threshold: [0] });
+                comment_observer.observe(document.getElementById('comment'));
+            } else {
+                loadComment();
+            }
+        }, 1);
+    </script>
+
+    
+    
+    
+    
+    
+    
+
+    
 
 
 
