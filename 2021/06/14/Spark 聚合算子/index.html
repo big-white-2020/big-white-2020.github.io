@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+
+    
+
+    <!-- 渲染优化 -->
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="HandheldFriendly" content="True" >
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!--icon-->
+
+    <link rel="shortcut icon" type='image/x-icon' href="/favicon.ico">
+
+
+    <!-- meta -->
+
+
+<title>Spark 聚合算子 | 大白</title>
+
+
+    <meta name="keywords" content="Spark, 大数据">
+
+
+    <!-- OpenGraph -->
+ 
+    <meta name="description" content="[toc] combineByKey在理解 groupByKey 和 reduceByKey 之前先看看 combineByKey def combineByKey[C](    createCombiner: V &#x3D;&gt; C,    mergeValue: (C, V) &#x3D;&gt; C,    mergeCombiners: (C, C) &#x3D;&gt; C): RDD[(K, C)] &#x3D; se">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark 聚合算子">
+<meta property="og:url" content="http://example.com/2021/06/14/Spark%20%E8%81%9A%E5%90%88%E7%AE%97%E5%AD%90/index.html">
+<meta property="og:site_name" content="大白">
+<meta property="og:description" content="[toc] combineByKey在理解 groupByKey 和 reduceByKey 之前先看看 combineByKey def combineByKey[C](    createCombiner: V &#x3D;&gt; C,    mergeValue: (C, V) &#x3D;&gt; C,    mergeCombiners: (C, C) &#x3D;&gt; C): RDD[(K, C)] &#x3D; se">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/images/group_by.png">
+<meta property="og:image" content="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/images/reduce_by.png">
+<meta property="article:published_time" content="2021-06-14T07:44:09.000Z">
+<meta property="article:modified_time" content="2021-06-14T15:20:50.874Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Spark">
+<meta property="article:tag" content="大数据">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/images/group_by.png">
+
+
+    
+<link rel="stylesheet" href="/css/style/main.css">
+ 
+
+
+    
+<link rel="stylesheet" href="/css/style/dark.css">
+
+    
+<script src="/js/darkmode.js"></script>
+
+
+
+    
+    
+        <link rel="stylesheet" id="hl-default-theme" href="/css/highlight/github.css" media="none" onload="if(getComputedStyle(document.documentElement).getPropertyValue('--color-mode').indexOf('dark')===-1)this.media='all'">
+        
+    
+
+    
+    
+
+    
+    <link rel="stylesheet" href="/css/style/note.css" media="none" onload="this.media='all'">
+
+
+     
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+ 
+
+    <!-- custom head -->
+
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+    <body>
+        <div id="app">
+            <header class="header">
+    <div class="header__left">
+        <a href="/" class="button">
+            <span class="logo__text">
+                大白
+            </span>
+        </a>
+    </div>
+    <div class="header__right">
+        
+            <div class="navbar__menus">
+                
+                    <a href="/" class="navbar-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="navbar-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="navbar-menu button">
+                        归档
+                    </a>
+                
+            </div>
+        
+        
+        
+    <a href="/search/" id="btn-search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="24" height="24" fill="currentColor" stroke="currentColor" stroke-width="32"><path d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z"></path></svg>
+    </a>
+
+
+        
+        
+    <a href="javaScript:void(0);" id="btn-toggle-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </a>
+
+
+         
+    <a href="javaScript:void(0);" id="b2t" aria-label="Back to Top" title="Back to Top">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='32' height='32' fill="currentColor" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.889,11.611c-0.17,0.17-0.443,0.17-0.612,0l-3.189-3.187l-3.363,3.36c-0.171,0.171-0.441,0.171-0.612,0c-0.172-0.169-0.172-0.443,0-0.611l3.667-3.669c0.17-0.17,0.445-0.172,0.614,0l3.496,3.493C14.058,11.167,14.061,11.443,13.889,11.611 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.692-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.383,10c0-4.07-3.312-7.382-7.383-7.382S2.618,5.93,2.618,10S5.93,17.381,10,17.381S17.383,14.07,17.383,10"></path>
+        </svg>
+    </a>
+
+
+        
+            <a class="dropdown-icon button" id="btn-dropdown">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path fill="currentColor" d="M3.314,4.8h13.372c0.41,0,0.743-0.333,0.743-0.743c0-0.41-0.333-0.743-0.743-0.743H3.314c-0.41,0-0.743,0.333-0.743,0.743C2.571,4.467,2.904,4.8,3.314,4.8z M16.686,15.2H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,15.2,16.686,15.2z M16.686,9.257H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,9.257,16.686,9.257z"></path>
+                </svg>
+            </a>
+            <div class="dropdown-menus" id="dropdown-menus">
+                <a class="dropback-icon button" id="btn-dropback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                        <path fill="currentColor" d="M11.469,10l7.08-7.08c0.406-0.406,0.406-1.064,0-1.469c-0.406-0.406-1.063-0.406-1.469,0L10,8.53l-7.081-7.08c-0.406-0.406-1.064-0.406-1.469,0c-0.406,0.406-0.406,1.063,0,1.469L8.531,10L1.45,17.081c-0.406,0.406-0.406,1.064,0,1.469c0.203,0.203,0.469,0.304,0.735,0.304c0.266,0,0.531-0.101,0.735-0.304L10,11.469l7.08,7.081c0.203,0.203,0.469,0.304,0.735,0.304c0.267,0,0.532-0.101,0.735-0.304c0.406-0.406,0.406-1.064,0-1.469L11.469,10z"></path>
+                    </svg>
+                </a>
+                
+                    <a href="/" class="dropdown-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="dropdown-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="dropdown-menu button">
+                        归档
+                    </a>
+                
+            </div>
+            <script>
+                document.getElementById('btn-dropdown').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    requestAnimationFrame(() => {
+                        dd.style.display = 'flex';
+                        requestAnimationFrame(() => {
+                            dd.style.transform = 'translateY(0)';
+                            dd.style.opacity = '1';
+                        });
+                    });
+                });
+                document.getElementById('btn-dropback').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    dd.style.transform = 'translateY(2.25rem)';                    
+                    dd.style.opacity = '0';
+                    setTimeout(() => {dd.style.display = 'none';}, 350);
+                });
+            </script>
+        
+    </div>
+</header>
+
+
+            <main class="main">
+    
+<div class="post-title">
+    <h1 class="post-title__text">
+        Spark 聚合算子
+    </h1>
+    <div class="post-title__meta">
+        <a href="/archives/2021/06/" class="post-meta__date button">
+    2021-06-14
+</a>
+        
+ 
+        
+    
+     
+    <span id="busuanzi_container_page_pv" hidden>
+        <span class="separate-dot"></span>
+        <span></span>
+        <span id="busuanzi_value_page_pv"></span>
+        <span>Views</span>
+    </span>
+
+
+
+ 
+
+ 
+    </div>
+</div>
+
+
+    <div class="post__with-side">
+        <aside class="post-side">
+            <div class="post-side__toc">
+                <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#combineByKey"><span class="toc-number">1.</span> <span class="toc-text">combineByKey</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#groupByKey"><span class="toc-number">2.</span> <span class="toc-text">groupByKey</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#reduceByKey"><span class="toc-number">3.</span> <span class="toc-text">reduceByKey</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#aggregateByKey"><span class="toc-number">4.</span> <span class="toc-text">aggregateByKey</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#foldByKey"><span class="toc-number">5.</span> <span class="toc-text">foldByKey</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E9%98%B6%E7%89%88"><span class="toc-number">6.</span> <span class="toc-text">进阶版</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#countByKey"><span class="toc-number">6.1.</span> <span class="toc-text">countByKey</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#countApproxDistinctByKey"><span class="toc-number">6.2.</span> <span class="toc-text">countApproxDistinctByKey</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text">总结</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="toc-number">8.</span> <span class="toc-text">参考文章</span></a></li></ol>
+            </div>
+        </aside>
+        <article class="post content-card">
+            <div class="post__header">
+                 
+                
+            </div>
+            <div class="post__content">
+                <p>[toc]</p>
+<h3 id="combineByKey"><a href="#combineByKey" class="headerlink" title="combineByKey"></a>combineByKey</h3><p>在理解 <code>groupByKey</code> 和 <code>reduceByKey</code> 之前先看看 <code>combineByKey</code></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">combineByKey</span></span>[<span class="type">C</span>](</span><br><span class="line">    createCombiner: <span class="type">V</span> =&gt; <span class="type">C</span>,</span><br><span class="line">    mergeValue: (<span class="type">C</span>, <span class="type">V</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">    mergeCombiners: (<span class="type">C</span>, <span class="type">C</span>) =&gt; <span class="type">C</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">C</span>)] = self.withScope &#123;</span><br><span class="line">  combineByKeyWithClassTag(createCombiner, mergeValue, mergeCombiners)(<span class="literal">null</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>combineBykey</code> 需要三个参数：<code>createCombiner</code>、<code>mergeValue</code>、<code>mergeCombiners</code></p>
+<p><code>createCombiner</code>：当碰到未出现过 key 时需要做的处理</p>
+<p><code>mergeValue</code>：当碰到出现过的 key 时需要做的处理</p>
+<p><code>mergeCombiners</code>：分布式环境下，多台机器的结果如何合并</p>
+<p>假设我们有下列一个 kv list，现在需要将 value 按照类别放到不同的 list 中，将 key 为水果的 value 都放到一个单独 list 中，将 key 为动物的 value 放到一个单独的 list 中</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="type">Seq</span>(<span class="string">&quot;fruit&quot;</span> -&gt; <span class="string">&quot;apple&quot;</span>, <span class="string">&quot;fruit&quot;</span> -&gt; <span class="string">&quot;banana&quot;</span>, <span class="string">&quot;animal&quot;</span> -&gt; <span class="string">&quot;monkey&quot;</span>, <span class="string">&quot;animal&quot;</span> -&gt; <span class="string">&quot;tiger&quot;</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> rdd = spark.sparkContext.parallelize(seq)</span><br><span class="line"><span class="keyword">val</span> res: <span class="type">RDD</span>[(<span class="type">String</span>, <span class="type">List</span>[<span class="type">String</span>])] = rdd.combineByKey(</span><br><span class="line">    (k: <span class="type">String</span>) =&gt; <span class="type">List</span>[<span class="type">String</span>](k), <span class="comment">// 1、碰到未出现过的 key 时调用这个函数。这里的处理方式为创建一个 list，之后会维护一个 key -&gt; list 的关系</span></span><br><span class="line">    (c: <span class="type">List</span>[<span class="type">String</span>], k: <span class="type">String</span>) =&gt; c.+:(k), <span class="comment">// 2、碰到出现过的 key，会调用这个函数，并把 1 中维护的 list 作为参数 c。这里的处理方式为把 value 添加到 list 中，并返回 list</span></span><br><span class="line">    (c1: <span class="type">List</span>[<span class="type">String</span>], c2: <span class="type">List</span>[<span class="type">String</span>]) =&gt; c1 ++ c2) <span class="comment">// 多台机器上的结果集合并时会调用这个函数，这里的处理方式为将两个 list 相加</span></span><br></pre></td></tr></table></figure>
+<p>调用完 <code>combineByKey</code> 后，会返回一个 <code>(String, List[String])</code> 的映射关系，我们把 <code>res</code> 打印一下可以得出</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">(animal,<span class="type">List</span>(monkey, tiger))</span><br><span class="line">(fruit,<span class="type">List</span>(apple, banana))</span><br></pre></td></tr></table></figure>
+<p>再贴一段代码，这段代码只需记住 <code>mapSideCombine</code> 默认值为 <code>true</code> 即可</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">combineByKeyWithClassTag</span></span>[<span class="type">C</span>](</span><br><span class="line">      createCombiner: <span class="type">V</span> =&gt; <span class="type">C</span>,</span><br><span class="line">      mergeValue: (<span class="type">C</span>, <span class="type">V</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">      mergeCombiners: (<span class="type">C</span>, <span class="type">C</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">      partitioner: <span class="type">Partitioner</span>,</span><br><span class="line">      mapSideCombine: <span class="type">Boolean</span> = <span class="literal">true</span>,</span><br><span class="line">      serializer: <span class="type">Serializer</span> = <span class="literal">null</span>)(<span class="keyword">implicit</span> ct: <span class="type">ClassTag</span>[<span class="type">C</span>]): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">C</span>)] = self.withScope &#123;</span><br><span class="line">      </span><br><span class="line">    <span class="comment">// 省略几行...</span></span><br><span class="line">    <span class="keyword">val</span> aggregator = <span class="keyword">new</span> <span class="type">Aggregator</span>[<span class="type">K</span>, <span class="type">V</span>, <span class="type">C</span>](</span><br><span class="line">      self.context.clean(createCombiner),</span><br><span class="line">      self.context.clean(mergeValue),</span><br><span class="line">      self.context.clean(mergeCombiners))</span><br><span class="line">    <span class="keyword">if</span> (self.partitioner == <span class="type">Some</span>(partitioner)) &#123;</span><br><span class="line">      self.mapPartitions(iter =&gt; &#123;</span><br><span class="line">        <span class="keyword">val</span> context = <span class="type">TaskContext</span>.get()</span><br><span class="line">        <span class="keyword">new</span> <span class="type">InterruptibleIterator</span>(context, aggregator.combineValuesByKey(iter, context))</span><br><span class="line">      &#125;, preservesPartitioning = <span class="literal">true</span>)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">new</span> <span class="type">ShuffledRDD</span>[<span class="type">K</span>, <span class="type">V</span>, <span class="type">C</span>](self, partitioner)</span><br><span class="line">        .setSerializer(serializer)</span><br><span class="line">        .setAggregator(aggregator)</span><br><span class="line">        .setMapSideCombine(mapSideCombine)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="groupByKey"><a href="#groupByKey" class="headerlink" title="groupByKey"></a>groupByKey</h3><p>再看看 <code>groupByKey</code>，<code>groupByKey</code> 有一个同胞兄弟 <code>groupBy</code>，<code>groupBy</code> 最终还是调用的 <code>groupByKey</code>，看看 <code>groupByKey</code> 的代码</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">groupByKey</span></span>(): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">Iterable</span>[<span class="type">V</span>])] = self.withScope &#123;</span><br><span class="line">  groupByKey(defaultPartitioner(self))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">groupByKey</span></span>(partitioner: <span class="type">Partitioner</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">Iterable</span>[<span class="type">V</span>])] = self.withScope &#123;</span><br><span class="line">  <span class="comment">// groupByKey shouldn&#x27;t use map side combine because map side combine does not</span></span><br><span class="line">  <span class="comment">// reduce the amount of data shuffled and requires all map side data be inserted</span></span><br><span class="line">  <span class="comment">// into a hash table, leading to more objects in the old gen.</span></span><br><span class="line">  <span class="keyword">val</span> createCombiner = (v: <span class="type">V</span>) =&gt; <span class="type">CompactBuffer</span>(v)</span><br><span class="line">  <span class="keyword">val</span> mergeValue = (buf: <span class="type">CompactBuffer</span>[<span class="type">V</span>], v: <span class="type">V</span>) =&gt; buf += v</span><br><span class="line">  <span class="keyword">val</span> mergeCombiners = (c1: <span class="type">CompactBuffer</span>[<span class="type">V</span>], c2: <span class="type">CompactBuffer</span>[<span class="type">V</span>]) =&gt; c1 ++= c2</span><br><span class="line">  <span class="keyword">val</span> bufs = combineByKeyWithClassTag[<span class="type">CompactBuffer</span>[<span class="type">V</span>]](</span><br><span class="line">    createCombiner, mergeValue, mergeCombiners, partitioner, mapSideCombine = <span class="literal">false</span>)</span><br><span class="line">  bufs.asInstanceOf[<span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">Iterable</span>[<span class="type">V</span>])]]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看出 <code>groupBy</code> 也是调用 <code>combineByKeyWithClassTag</code>，只不过 <code>createCombiner</code>、<code>mergeValue</code>、<code>mergeCombiners</code> 不是自定义的。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> createCombiner = (v: <span class="type">V</span>) =&gt; <span class="type">CompactBuffer</span>(v)</span><br></pre></td></tr></table></figure>
+<p><code>groupByKey</code> 的 <code>createCombiner</code> 是创建一个 <code>buffer</code>，这个 <code>buffer</code> 采用数组存储</p>
+<p><code>mergeValue</code> 则是将值加入数组</p>
+<p><code>mergeCombiners</code> 就将两个数组合并</p>
+<p>注意 <code>groupByKey</code> 调用 <code>combineByKeyWithClassTag</code> 时传入的 <code>mapSideCombine</code> 为 <code>false</code> 表示不进行预聚合，即 <code>mergeValue</code> 不是发生在 <code>shuffle</code> 前<br><img src="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/images/group_by.png" class="lazyload" data-srcset="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/images/group_by.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg=="></p>
+<center style="font-size:14px;color:#C0C0C0;text-decoration:underline">图片来自：https://databricks.gitbooks.io</center>
+
+<h3 id="reduceByKey"><a href="#reduceByKey" class="headerlink" title="reduceByKey"></a>reduceByKey</h3><p>再看看 <code>reduceByKey</code> 的实现，<code>reduceByKey</code> 也有一个兄弟叫 <code>reduce</code>，不过 <code>reduce</code> 没有调用 <code>reduceByKey</code>，而是使用的 <code>reduceLeft</code>。直接上 <code>reduceByKey</code> 的代码</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">reduceByKey</span></span>(func: (<span class="type">V</span>, <span class="type">V</span>) =&gt; <span class="type">V</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">V</span>)] = self.withScope &#123;</span><br><span class="line">    reduceByKey(defaultPartitioner(self), func)</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">reduceByKey</span></span>(partitioner: <span class="type">Partitioner</span>, func: (<span class="type">V</span>, <span class="type">V</span>) =&gt; <span class="type">V</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">V</span>)] = self.withScope &#123;</span><br><span class="line">    combineByKeyWithClassTag[<span class="type">V</span>]((v: <span class="type">V</span>) =&gt; v, func, func, partitioner)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p><code>reduceByKey</code> 最终也是调用 <code>combineByKeyWithClassTag</code>，只不过 <code>mergeValue</code> 和 <code>mergeCombiners</code> 都使用我们自定义的一个函数，不过需要注意这个函数 <code>func: (V, V) =&gt; V</code>，这个函数要求输入的两个参数类型必须一致且返回的类型和输入类型一致，所以一般将输入的两个参数进行聚合再返回。所以聚合后我们得到的是 <code>k -&gt; v</code> 。所以在分布式环境下进行 <code>mergeCombiners</code> 时可以使用和 <code>mergeValue</code> 同一个函数即可。</p>
+<p><img src="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/images/reduce_by.png" class="lazyload" data-srcset="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/images/reduce_by.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg=="></p>
+<center style="font-size:14px;color:#C0C0C0;text-decoration:underline">图片来自：https://databricks.gitbooks.io</center> 
+
+<p>从上面图中可以看出，<code>groupByKey</code> 在 <code>shuffle</code> 前是不进行预聚合的，而 <code>reduceBykey</code> 则是将 key 相同的数据聚合成一个，图中只是最简单的场景，生产环境中场景更加复杂，数据量大得多，所以在数据量相同的情况，<code>groupByKey</code> 的性能必然要比 <code>reduceByKey</code> 更差。</p>
+<h3 id="aggregateByKey"><a href="#aggregateByKey" class="headerlink" title="aggregateByKey"></a>aggregateByKey</h3><p>先看代码</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">aggregateByKey</span></span>[<span class="type">U</span>: <span class="type">ClassTag</span>](zeroValue: <span class="type">U</span>)(seqOp: (<span class="type">U</span>, <span class="type">V</span>) =&gt; <span class="type">U</span>,</span><br><span class="line">      combOp: (<span class="type">U</span>, <span class="type">U</span>) =&gt; <span class="type">U</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">U</span>)] = self.withScope &#123;</span><br><span class="line">    aggregateByKey(zeroValue, defaultPartitioner(self))(seqOp, combOp)</span><br><span class="line"> &#125;</span><br><span class="line">  </span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">aggregateByKey</span></span>[<span class="type">U</span>: <span class="type">ClassTag</span>](zeroValue: <span class="type">U</span>, partitioner: <span class="type">Partitioner</span>)(seqOp: (<span class="type">U</span>, <span class="type">V</span>) =&gt; <span class="type">U</span>,</span><br><span class="line">      combOp: (<span class="type">U</span>, <span class="type">U</span>) =&gt; <span class="type">U</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">U</span>)] = self.withScope &#123;</span><br><span class="line">      </span><br><span class="line">   <span class="comment">// 省略几行...</span></span><br><span class="line">    <span class="keyword">val</span> createZero = () =&gt; cachedSerializer.deserialize[<span class="type">U</span>](<span class="type">ByteBuffer</span>.wrap(zeroArray))</span><br><span class="line"></span><br><span class="line">    <span class="comment">// We will clean the combiner closure later in `combineByKey`</span></span><br><span class="line">    <span class="keyword">val</span> cleanedSeqOp = self.context.clean(seqOp)</span><br><span class="line">    combineByKeyWithClassTag[<span class="type">U</span>]((v: <span class="type">V</span>) =&gt; cleanedSeqOp(createZero(), v),</span><br><span class="line">      cleanedSeqOp, combOp, partitioner)</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>  <code>aggregateByKey</code> 也有三个参数：</p>
+<p>  <code>zeroValue</code> ：‘零值’，聚合之前的初始值，必须是可变的，每一个分区中的每一个 key 都有一个初始值<br>  <code>seqOp</code>：将 V 聚合进 U 的操作，作用于同一个分区里<br>  <code>combOp</code>：将两个 U 合并的操作，作用于不同分区之间</p>
+<p>  <code>aggregateByKey</code> 和 <code>combineByKey</code> 非常相似，重点关注 <code>combineByKeyWithClassTag[U]((v: V) =&gt; cleanedSeqOp(createZero(), v),       cleanedSeqOp, combOp, partitioner)</code> 发现 <code>createCombiner</code> 和 <code>mergeValue</code> 使用的是统一个函数，只不过 <code>createCombiner</code> 时传入了零值。所以当 <code>createCombiner</code> 和 <code>mergeValue</code> 操作一样时优先使用 <code>aggregateByKey</code></p>
+<h3 id="foldByKey"><a href="#foldByKey" class="headerlink" title="foldByKey"></a>foldByKey</h3><p>  show code<br>  <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">foldByKey</span></span>(</span><br><span class="line">    zeroValue: <span class="type">V</span>,</span><br><span class="line">    partitioner: <span class="type">Partitioner</span>)(func: (<span class="type">V</span>, <span class="type">V</span>) =&gt; <span class="type">V</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">V</span>)] = self.withScope &#123;</span><br><span class="line">  </span><br><span class="line">  <span class="comment">// 省略几行...</span></span><br><span class="line">  <span class="keyword">val</span> createZero = () =&gt; cachedSerializer.deserialize[<span class="type">V</span>](<span class="type">ByteBuffer</span>.wrap(zeroArray))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> cleanedFunc = self.context.clean(func)</span><br><span class="line">  combineByKeyWithClassTag[<span class="type">V</span>]((v: <span class="type">V</span>) =&gt; cleanedFunc(createZero(), v),</span><br><span class="line">    cleanedFunc, cleanedFunc, partitioner)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>  这个 <code>foldByKey</code> 相较于 <code>aggregateByKey</code> combine 的三个参数都使用一个函数，即 <code>crateCombiner</code>、<code>mergeValue</code>、<code>mergeCombiners</code> 都相同，只不过 <code>crateCombiner</code> 使用了零值</p>
+<h3 id="进阶版"><a href="#进阶版" class="headerlink" title="进阶版"></a>进阶版</h3><p>  <code>combineByKey</code><br>  <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">combineByKey</span></span>[<span class="type">C</span>](</span><br><span class="line">    createCombiner: <span class="type">V</span> =&gt; <span class="type">C</span>,</span><br><span class="line">    mergeValue: (<span class="type">C</span>, <span class="type">V</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">    mergeCombiners: (<span class="type">C</span>, <span class="type">C</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">    numPartitions: <span class="type">Int</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">C</span>)] = self.withScope &#123;</span><br><span class="line">  combineByKeyWithClassTag(createCombiner, mergeValue, mergeCombiners, numPartitions)(<span class="literal">null</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">combineByKey</span></span>[<span class="type">C</span>](</span><br><span class="line">    createCombiner: <span class="type">V</span> =&gt; <span class="type">C</span>,</span><br><span class="line">    mergeValue: (<span class="type">C</span>, <span class="type">V</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">    mergeCombiners: (<span class="type">C</span>, <span class="type">C</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">    partitioner: <span class="type">Partitioner</span>,</span><br><span class="line">    mapSideCombine: <span class="type">Boolean</span> = <span class="literal">true</span>,</span><br><span class="line">    serializer: <span class="type">Serializer</span> = <span class="literal">null</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">C</span>)] = self.withScope &#123;</span><br><span class="line">  combineByKeyWithClassTag(createCombiner, mergeValue, mergeCombiners,</span><br><span class="line">    partitioner, mapSideCombine, serializer)(<span class="literal">null</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>  这两个进阶版的 <code>combineByKey</code> 比普通版的 <code>combineByKey</code> 分别多了可以指定分区数的<br> <code>numPartitions</code> 参数和指定分区器的 <code>Partitioner</code> 参数，其它都一致。如果不指定分区器，则使用 <code>self</code> 即调用者的分区器类型</p>
+<p><code>groupByKey</code>、<code>reduceByKey</code> 和 <code>aggregateByKey</code> 的进阶版也一样，都只是增加了指定分区数和分区器的参数。</p>
+<h4 id="countByKey"><a href="#countByKey" class="headerlink" title="countByKey"></a>countByKey</h4><p><code>countByKey</code> 顾名思义，能根据 <code>key</code> 计数，看看源码</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">countByKey</span></span>(): <span class="type">Map</span>[<span class="type">K</span>, <span class="type">Long</span>] = self.withScope &#123;</span><br><span class="line">  self.mapValues(_ =&gt; <span class="number">1</span>L).reduceByKey(_ + _).collect().toMap</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>countByKey</code> 使用的就是 <code>reduceByKey</code></p>
+<h4 id="countApproxDistinctByKey"><a href="#countApproxDistinctByKey" class="headerlink" title="countApproxDistinctByKey"></a>countApproxDistinctByKey</h4><p>统计每个 <code>key</code> 下去重后的近似值，可以根据 <code>relativeSD</code> 参数设置相对精度，默认值是 0.05，但必须大于 0.000017。<code>countApproxDistinctByKey</code> 底层采用 <code>HyperLogLog</code> 统计</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">countApproxDistinctByKey</span></span>(relativeSD: <span class="type">Double</span> = <span class="number">0.05</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">Long</span>)] = self.withScope &#123;</span><br><span class="line">  countApproxDistinctByKey(relativeSD, defaultPartitioner(self))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">countApproxDistinctByKey</span></span>(</span><br><span class="line">    relativeSD: <span class="type">Double</span>,</span><br><span class="line">    partitioner: <span class="type">Partitioner</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">Long</span>)] = self.withScope &#123;</span><br><span class="line">  require(relativeSD &gt; <span class="number">0.000017</span>, <span class="string">s&quot;accuracy (<span class="subst">$relativeSD</span>) must be greater than 0.000017&quot;</span>)</span><br><span class="line">  <span class="keyword">val</span> p = math.ceil(<span class="number">2.0</span> * math.log(<span class="number">1.054</span> / relativeSD) / math.log(<span class="number">2</span>)).toInt</span><br><span class="line">  assert(p &lt;= <span class="number">32</span>)</span><br><span class="line">  countApproxDistinctByKey(<span class="keyword">if</span> (p &lt; <span class="number">4</span>) <span class="number">4</span> <span class="keyword">else</span> p, <span class="number">0</span>, partitioner)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p> <code>combineByKey</code>、<code>groupByKey</code>、<code>reduceBykey</code>、<code>aggregateByKey</code>、<code>foldByKey</code> 这几个算子都是基于 <code>combineByKeyWithClassTag</code>，而 <code>combineByKeyWithClassTag</code> 的核心参数就三个，分别是 <code>crateCombiner</code>、<code>mergeValue</code>、<code>mergeCombiners</code>。</p>
+<p> 五个算子的主要区别：<code>combinerByKey</code> 和 <code>aggregateByKey</code> 输入输出类型可以不一致，而 <code>reduceByKey</code> 和 <code>foldByKey</code> 要求输入和输出参数一致，<code>groupByKey</code> 就不是聚合算子，只能算分组算子，且性能最差，因为会 <code>shuffle</code> 所有值。</p>
+<p> 当 <code>crateCombiner</code> 和 <code>mergeValue</code> 是一样的操作时可以选用 <code>aggregateByKey</code>，而 <code>createCombiner</code>、<code>mergeValue</code> 和 <code>mergeCombiners</code> 都一样时，可以选用 <code>foldByKey</code><br>，根据需要各取所需即可。</p>
+<h3 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h3><p> <a target="_blank" rel="noopener" href="https://blog.csdn.net/wo334499/article/details/51689587">结合Spark源码分析, combineByKey, aggregateByKey, foldByKey, reduceByKey</a></p>
+<p> <a target="_blank" rel="noopener" href="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/best_practices/prefer_reducebykey_over_groupbykey.html">Avoid GroupByKey</a></p>
+
+            </div>
+             
+            <div class="post-footer__meta">
+    <p>
+        updated at 2021-06-14
+    </p>
+</div> 
+            <div class="post-meta__cats">
+    
+    
+        <a href="/tags/Spark/" class="post-tags__link button"># Spark</a>
+    
+        <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/" class="post-tags__link button"># 大数据</a>
+    
+</div> 
+        </article>
+        
+            <div class="post__comments content-card" id="comment">
+                
+    <h4>Comments</h4>
+    
+    
+    
+    
+    
+    <div id="gitalk-container"></div>
+
+    
+    
+    
+    
+
+
+            </div>
+        
+    </div>
+
+
+</main>
+
+            <footer class="footer">
+    
+
+
+    
+    
+    
+        <span id="busuanzi_container_site_uv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_uv"></span>
+            <span>Viewers</span>
+            
+                <span>&nbsp;&nbsp;&nbsp;|</span>
+            
+        </span>
+    
+    
+        <span id="busuanzi_container_site_pv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_pv"></span>
+            <span>Views</span>
+            
+        </span>
+    
+ 
+ 
+
+ 
+    
+        
+        <p class="footer-copyright">
+            Copyright&nbsp;©&nbsp;2021&nbsp;<a href="/">大白</a>
+        </p>
+    
+    
+    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme - <a href="https://github.com/ChrAlpha/hexo-theme-cards" target="_blank">Cards</a></p>
+</footer>
+
+        </div>
+        
+    <script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.1.0/dist/lazyload.min.js"></script>
+    <script>
+        window.lazyLoadOptions = {
+            elements_selector: ".lazyload",
+            threshold: 0
+        };
+    </script>
+ 
+
+ 
+    <script>
+        window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+        ga('create', 'UA-178473615-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <script async src="https://www.google-analytics.com/analytics.js"></script>
+ 
+
+ 
+
+ 
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?fb2dded415192023dd108d2b441862de';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+ 
+
+  
+
+
+
+ 
+
+
+    
+
+
+
+    
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.css">
+
+    
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.js"></script>
+
+    <script>
+        let lazyloadT = Boolean('[object Object]'),
+            auto_fancybox = Boolean('true')
+        if (auto_fancybox) {
+            $(".post__content").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        } else {
+            $(".post__content").find("fancybox").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        }
+    </script>
+ 
+
+ 
+    <script defer src="/js/b2t.js"></script>
+
+
+
+
+
+    
+
+    
+    
+    
+
+    
+    
+    
+    <script>
+        function loadComment() {
+            let e, i;
+            (e = document.createElement("script")).src = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js',
+            document.body.appendChild(e);
+            e.onload = () => {
+                var gitalk = new Gitalk({
+                    clientID: '5343251f7191333c2cf8',
+                    clientSecret: 'c0471f2aaeafdec2f9ad0edfd4df7404db114101',
+                    repo: 'big-white-2020.github.io',
+                    owner: 'big-white-2020',
+                    admin: 'big-white-2020',
+                    id: window.location.pathname,
+                    distractionFreeMode: false
+                });
+                gitalk.render('gitalk-container');
+            };
+            (i = document.createElement("link")).rel = "stylesheet",
+            i.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css',
+            document.head.appendChild(i);
+        }
+    
+        var runningOnBrowser = typeof window !== "undefined";
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+    
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var comment_observer = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) {
+                        loadComment();
+                        comment_observer.disconnect();
+                    }
+                }, { threshold: [0] });
+                comment_observer.observe(document.getElementById('comment'));
+            } else {
+                loadComment();
+            }
+        }, 1);
+    </script>
+
+    
+    
+    
+    
+    
+    
+
+    
+
+
+
+    </body>
+</html>
