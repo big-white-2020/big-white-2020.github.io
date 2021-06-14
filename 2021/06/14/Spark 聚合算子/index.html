@@ -29,17 +29,17 @@
 
     <!-- OpenGraph -->
  
-    <meta name="description" content="[toc] combineByKey在理解 groupByKey 和 reduceByKey 之前先看看 combineByKey def combineByKey[C](    createCombiner: V &#x3D;&gt; C,    mergeValue: (C, V) &#x3D;&gt; C,    mergeCombiners: (C, C) &#x3D;&gt; C): RDD[(K, C)] &#x3D; se">
+    <meta name="description" content="combineByKey在理解 groupByKey 和 reduceByKey 之前先看看 combineByKey def combineByKey[C](    createCombiner: V &#x3D;&gt; C,    mergeValue: (C, V) &#x3D;&gt; C,    mergeCombiners: (C, C) &#x3D;&gt; C): RDD[(K, C)] &#x3D; self.wit">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spark 聚合算子">
 <meta property="og:url" content="http://example.com/2021/06/14/Spark%20%E8%81%9A%E5%90%88%E7%AE%97%E5%AD%90/index.html">
 <meta property="og:site_name" content="大白">
-<meta property="og:description" content="[toc] combineByKey在理解 groupByKey 和 reduceByKey 之前先看看 combineByKey def combineByKey[C](    createCombiner: V &#x3D;&gt; C,    mergeValue: (C, V) &#x3D;&gt; C,    mergeCombiners: (C, C) &#x3D;&gt; C): RDD[(K, C)] &#x3D; se">
+<meta property="og:description" content="combineByKey在理解 groupByKey 和 reduceByKey 之前先看看 combineByKey def combineByKey[C](    createCombiner: V &#x3D;&gt; C,    mergeValue: (C, V) &#x3D;&gt; C,    mergeCombiners: (C, C) &#x3D;&gt; C): RDD[(K, C)] &#x3D; self.wit">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/images/group_by.png">
 <meta property="og:image" content="https://databricks.gitbooks.io/databricks-spark-knowledge-base/content/images/reduce_by.png">
 <meta property="article:published_time" content="2021-06-14T07:44:09.000Z">
-<meta property="article:modified_time" content="2021-06-14T15:20:50.874Z">
+<meta property="article:modified_time" content="2021-06-14T15:22:18.032Z">
 <meta property="article:author" content="John Doe">
 <meta property="article:tag" content="Spark">
 <meta property="article:tag" content="大数据">
@@ -223,8 +223,7 @@
                 
             </div>
             <div class="post__content">
-                <p>[toc]</p>
-<h3 id="combineByKey"><a href="#combineByKey" class="headerlink" title="combineByKey"></a>combineByKey</h3><p>在理解 <code>groupByKey</code> 和 <code>reduceByKey</code> 之前先看看 <code>combineByKey</code></p>
+                <h3 id="combineByKey"><a href="#combineByKey" class="headerlink" title="combineByKey"></a>combineByKey</h3><p>在理解 <code>groupByKey</code> 和 <code>reduceByKey</code> 之前先看看 <code>combineByKey</code></p>
 <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">combineByKey</span></span>[<span class="type">C</span>](</span><br><span class="line">    createCombiner: <span class="type">V</span> =&gt; <span class="type">C</span>,</span><br><span class="line">    mergeValue: (<span class="type">C</span>, <span class="type">V</span>) =&gt; <span class="type">C</span>,</span><br><span class="line">    mergeCombiners: (<span class="type">C</span>, <span class="type">C</span>) =&gt; <span class="type">C</span>): <span class="type">RDD</span>[(<span class="type">K</span>, <span class="type">C</span>)] = self.withScope &#123;</span><br><span class="line">  combineByKeyWithClassTag(createCombiner, mergeValue, mergeCombiners)(<span class="literal">null</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p><code>combineBykey</code> 需要三个参数：<code>createCombiner</code>、<code>mergeValue</code>、<code>mergeCombiners</code></p>
 <p><code>createCombiner</code>：当碰到未出现过 key 时需要做的处理</p>
