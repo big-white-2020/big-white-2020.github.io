@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+
+    
+
+    <!-- 渲染优化 -->
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="HandheldFriendly" content="True" >
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!--icon-->
+
+    <link rel="shortcut icon" type='image/x-icon' href="/favicon.ico">
+
+
+    <!-- meta -->
+
+
+<title>Spark repartition vs coalesce | 大白</title>
+
+
+    <meta name="keywords" content="Spark, 大数据">
+
+
+    <!-- OpenGraph -->
+ 
+    <meta name="description" content="在平时经常需要对 RDD 重新分区，或增加分区以提高并行度，或减少分区写文件以减少小文件数量，对 RDD 的分区数量操作有 repartition 和 coalesce 两个算子 repartitionrepartition 算子会返回一个指定分区数的新 RDD，可以用来增加或者减小分区数量以调整 RDD 的并行度。不过这种增加和减小分区数量是以 shuffle 为代价换来的。 def repar">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark repartition vs coalesce">
+<meta property="og:url" content="http://example.com/2021/06/15/Spark%20repartition%20vs%20coalesce/index.html">
+<meta property="og:site_name" content="大白">
+<meta property="og:description" content="在平时经常需要对 RDD 重新分区，或增加分区以提高并行度，或减少分区写文件以减少小文件数量，对 RDD 的分区数量操作有 repartition 和 coalesce 两个算子 repartitionrepartition 算子会返回一个指定分区数的新 RDD，可以用来增加或者减小分区数量以调整 RDD 的并行度。不过这种增加和减小分区数量是以 shuffle 为代价换来的。 def repar">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-06-15T10:00:00.000Z">
+<meta property="article:modified_time" content="2021-06-15T15:06:38.878Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="Spark">
+<meta property="article:tag" content="大数据">
+<meta name="twitter:card" content="summary_large_image">
+
+
+    
+<link rel="stylesheet" href="/css/style/main.css">
+ 
+
+
+    
+<link rel="stylesheet" href="/css/style/dark.css">
+
+    
+<script src="/js/darkmode.js"></script>
+
+
+
+    
+    
+        <link rel="stylesheet" id="hl-default-theme" href="/css/highlight/github.css" media="none" onload="if(getComputedStyle(document.documentElement).getPropertyValue('--color-mode').indexOf('dark')===-1)this.media='all'">
+        
+    
+
+    
+    
+
+    
+    <link rel="stylesheet" href="/css/style/note.css" media="none" onload="this.media='all'">
+
+
+     
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+ 
+
+    <!-- custom head -->
+
+<meta name="generator" content="Hexo 5.1.1"></head>
+
+    <body>
+        <div id="app">
+            <header class="header">
+    <div class="header__left">
+        <a href="/" class="button">
+            <span class="logo__text">
+                大白
+            </span>
+        </a>
+    </div>
+    <div class="header__right">
+        
+            <div class="navbar__menus">
+                
+                    <a href="/" class="navbar-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="navbar-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="navbar-menu button">
+                        归档
+                    </a>
+                
+            </div>
+        
+        
+        
+    <a href="/search/" id="btn-search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="24" height="24" fill="currentColor" stroke="currentColor" stroke-width="32"><path d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z"></path></svg>
+    </a>
+
+
+        
+        
+    <a href="javaScript:void(0);" id="btn-toggle-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </a>
+
+
+         
+    <a href="javaScript:void(0);" id="b2t" aria-label="Back to Top" title="Back to Top">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='32' height='32' fill="currentColor" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.889,11.611c-0.17,0.17-0.443,0.17-0.612,0l-3.189-3.187l-3.363,3.36c-0.171,0.171-0.441,0.171-0.612,0c-0.172-0.169-0.172-0.443,0-0.611l3.667-3.669c0.17-0.17,0.445-0.172,0.614,0l3.496,3.493C14.058,11.167,14.061,11.443,13.889,11.611 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.692-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.383,10c0-4.07-3.312-7.382-7.383-7.382S2.618,5.93,2.618,10S5.93,17.381,10,17.381S17.383,14.07,17.383,10"></path>
+        </svg>
+    </a>
+
+
+        
+            <a class="dropdown-icon button" id="btn-dropdown">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path fill="currentColor" d="M3.314,4.8h13.372c0.41,0,0.743-0.333,0.743-0.743c0-0.41-0.333-0.743-0.743-0.743H3.314c-0.41,0-0.743,0.333-0.743,0.743C2.571,4.467,2.904,4.8,3.314,4.8z M16.686,15.2H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,15.2,16.686,15.2z M16.686,9.257H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,9.257,16.686,9.257z"></path>
+                </svg>
+            </a>
+            <div class="dropdown-menus" id="dropdown-menus">
+                <a class="dropback-icon button" id="btn-dropback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                        <path fill="currentColor" d="M11.469,10l7.08-7.08c0.406-0.406,0.406-1.064,0-1.469c-0.406-0.406-1.063-0.406-1.469,0L10,8.53l-7.081-7.08c-0.406-0.406-1.064-0.406-1.469,0c-0.406,0.406-0.406,1.063,0,1.469L8.531,10L1.45,17.081c-0.406,0.406-0.406,1.064,0,1.469c0.203,0.203,0.469,0.304,0.735,0.304c0.266,0,0.531-0.101,0.735-0.304L10,11.469l7.08,7.081c0.203,0.203,0.469,0.304,0.735,0.304c0.267,0,0.532-0.101,0.735-0.304c0.406-0.406,0.406-1.064,0-1.469L11.469,10z"></path>
+                    </svg>
+                </a>
+                
+                    <a href="/" class="dropdown-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="dropdown-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="dropdown-menu button">
+                        归档
+                    </a>
+                
+            </div>
+            <script>
+                document.getElementById('btn-dropdown').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    requestAnimationFrame(() => {
+                        dd.style.display = 'flex';
+                        requestAnimationFrame(() => {
+                            dd.style.transform = 'translateY(0)';
+                            dd.style.opacity = '1';
+                        });
+                    });
+                });
+                document.getElementById('btn-dropback').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    dd.style.transform = 'translateY(2.25rem)';                    
+                    dd.style.opacity = '0';
+                    setTimeout(() => {dd.style.display = 'none';}, 350);
+                });
+            </script>
+        
+    </div>
+</header>
+
+
+            <main class="main">
+    
+<div class="post-title">
+    <h1 class="post-title__text">
+        Spark repartition vs coalesce
+    </h1>
+    <div class="post-title__meta">
+        <a href="/archives/2021/06/" class="post-meta__date button">
+    2021-06-15
+</a>
+        
+ 
+        
+    
+     
+    <span id="busuanzi_container_page_pv" hidden>
+        <span class="separate-dot"></span>
+        <span></span>
+        <span id="busuanzi_value_page_pv"></span>
+        <span>Views</span>
+    </span>
+
+
+
+ 
+
+ 
+    </div>
+</div>
+
+
+    <div class="post__with-side">
+        <aside class="post-side">
+            <div class="post-side__toc">
+                <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#repartition"><span class="toc-number">1.</span> <span class="toc-text">repartition</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#coalesce"><span class="toc-number">2.</span> <span class="toc-text">coalesce</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%90%86"><span class="toc-number">2.1.</span> <span class="toc-text">原理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="toc-number">4.</span> <span class="toc-text">参考文章</span></a></li></ol>
+            </div>
+        </aside>
+        <article class="post content-card">
+            <div class="post__header">
+                 
+                
+            </div>
+            <div class="post__content">
+                <p>在平时经常需要对 RDD 重新分区，或增加分区以提高并行度，或减少分区写文件以减少小文件数量，对 RDD 的分区数量操作有 <code>repartition</code> 和 <code>coalesce</code> 两个算子</p>
+<h2 id="repartition"><a href="#repartition" class="headerlink" title="repartition"></a>repartition</h2><p><code>repartition</code> 算子会返回一个指定分区数的新 <code>RDD</code>，可以用来增加或者减小分区数量以调整 <code>RDD</code> 的并行度。不过这种增加和减小分区数量是以 <code>shuffle</code> 为代价换来的。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">def repartition(numPartitions: Int)(implicit ord: Ordering[T] &#x3D; null): RDD[T] &#x3D; withScope &#123;</span><br><span class="line">  coalesce(numPartitions, shuffle &#x3D; true)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>repartition</code> 的代码很简单，接受一个分区数参数，然后调用 <code>coalesce</code> 方法</p>
+<h2 id="coalesce"><a href="#coalesce" class="headerlink" title="coalesce"></a>coalesce</h2><p><code>coalesce</code> 有两种模式，分别是 <code>shuffle</code> 和非 <code>shuffle</code> 模式，从 <code>repartition</code> 调用的是 <code>shuffle</code> 模式，这一点从参数可以看出来。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">def coalesce(numPartitions: Int, shuffle: Boolean &#x3D; false,</span><br><span class="line">               partitionCoalescer: Option[PartitionCoalescer] &#x3D; Option.empty)</span><br><span class="line">              (implicit ord: Ordering[T] &#x3D; null)</span><br><span class="line">      : RDD[T] &#x3D; withScope &#123;</span><br><span class="line">    if (shuffle) &#123;</span><br><span class="line">      &#x2F;** Distributes elements evenly across output partitions, starting from a random partition. *&#x2F;</span><br><span class="line">      val distributePartition &#x3D; (index: Int, items: Iterator[T]) &#x3D;&gt; &#123;</span><br><span class="line">        var position &#x3D; new Random(hashing.byteswap32(index)).nextInt(numPartitions)</span><br><span class="line">        items.map &#123; t &#x3D;&gt;</span><br><span class="line">          &#x2F;&#x2F; Note that the hash code of the key will just be the key itself. The HashPartitioner</span><br><span class="line">          &#x2F;&#x2F; will mod it with the number of total partitions.</span><br><span class="line">          position &#x3D; position + 1</span><br><span class="line">          (position, t)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; : Iterator[(Int, T)]</span><br><span class="line"></span><br><span class="line">      &#x2F;&#x2F; include a shuffle step so that our upstream tasks are still distributed</span><br><span class="line">      new CoalescedRDD(</span><br><span class="line">        new ShuffledRDD[Int, T, T](</span><br><span class="line">          mapPartitionsWithIndexInternal(distributePartition, isOrderSensitive &#x3D; true),</span><br><span class="line">          new HashPartitioner(numPartitions)),</span><br><span class="line">        numPartitions,</span><br><span class="line">        partitionCoalescer).values</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">      new CoalescedRDD(this, numPartitions, partitionCoalescer)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果 <code>shuffle</code> 参数为 <code>true</code> 则会将一个 <code>ShuffledRDD</code> 封装进 <code>CoalescedRDD</code>。如果 <code>shuffle</code> 参数为 <code>false(默认)</code> 则创建一个 <code>CoalescedRDD</code> 对象。主要看看非 <code>shuffle</code> 模式</p>
+<p><code>coalesce</code> 的非 <code>shuffle</code> 模式只能用来减少分区，例如有 1000 个分区，可用用 <code>coalesce(100)</code> 减少至 100 个分区，并且不会 <code>shuffle</code>；如果传入的参数比现在的分区数量多，则不会有任何效果，如果要添加分区数量可以使用 <code>repartition</code> 或者使用 <code>coalesce</code> 时 <code>shuffle</code> 参数传入 <code>false</code>。</p>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>主要原理就是将多个 <code>partition</code> 划分成一个个 <code>partitionGroup</code>，例如前面的例子，有 1000 个分区，需要减少至 100 个分区，那么就会创建 100 个 <code>partitionGroup</code>，每个 <code>partitionGroup</code> 都有 10 个 <code>partition</code>，相当于将 1000 个分区分成 100 组，每组有 10 个分区，而一个 <code>partitionGroup</code> 则作为 <code>CoalescedRDD</code> 的一个分区。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class PartitionGroup(val prefLoc: Option[String] &#x3D; None) &#123;</span><br><span class="line">  val partitions &#x3D; mutable.ArrayBuffer[Partition]()</span><br><span class="line">  def numPartitions: Int &#x3D; partitions.size</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>重点看下 <code>getPartitions</code> 和 <code>compute</code> 方法</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">override def getPartitions: Array[Partition] &#x3D; &#123;</span><br><span class="line">  val pc &#x3D; partitionCoalescer.getOrElse(new DefaultPartitionCoalescer())</span><br><span class="line"></span><br><span class="line">  pc.coalesce(maxPartitions, prev).zipWithIndex.map &#123;</span><br><span class="line">    case (pg, i) &#x3D;&gt;</span><br><span class="line">      val ids &#x3D; pg.partitions.map(_.index).toArray</span><br><span class="line">      CoalescedRDDPartition(i, prev, ids, pg.prefLoc)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里会使用 <code>DefaultPartitionCoalescer</code> 进行 <code>coalesce</code>，然后封装到 <code>CoalescedRDDPartition</code> 中，这样一个 <code>partitionGroup</code> 就封装成一个 <code>partition</code> 了 再看下 <code>DefaultPartitionCoalescer</code> 的 <code>coalesce</code></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">def coalesce(maxPartitions: Int, prev: RDD[_]): Array[PartitionGroup] &#x3D; &#123;</span><br><span class="line">  val partitionLocs &#x3D; new PartitionLocations(prev)</span><br><span class="line">  &#x2F;&#x2F; setup the groups (bins)</span><br><span class="line">  setupGroups(math.min(prev.partitions.length, maxPartitions), partitionLocs)</span><br><span class="line">  &#x2F;&#x2F; assign partitions (balls) to each group (bins)</span><br><span class="line">  throwBalls(maxPartitions, prev, balanceSlack, partitionLocs)</span><br><span class="line">  getPartitions</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过 <code>setupGroups</code> 和 <code>throwBalls</code> 两个方法之后，会将 <code>dependencesRDD</code> 尽可能按 <code>preferredLocation</code> 划分好分组，放入 <code>val groupArr = ArrayBuffer[PartitionGroup]()</code> 中，最后调用 <code>DefaultPartitionCoalescer</code> 的 <code>getPartitions</code> 返回 <code>PartitionsGroup</code> 数组</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">def getPartitions: Array[PartitionGroup] &#x3D; groupArr.filter( pg &#x3D;&gt; pg.numPartitions &gt; 0).toArray</span><br></pre></td></tr></table></figure>
+
+<p>再来看下 <code>compute</code> 方法</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">override def compute(partition: Partition, context: TaskContext): Iterator[T] &#x3D; &#123;</span><br><span class="line">  partition.asInstanceOf[CoalescedRDDPartition].parents.iterator.flatMap &#123; parentPartition &#x3D;&gt;</span><br><span class="line">    firstParent[T].iterator(parentPartition, context)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>compute</code> 中的 <code>Partition</code> 就是一个 <code>PartitionGroup</code>，<code>compute</code> 迭代一个 <code>partition</code> 就是迭代一个 <code>partitionGroup</code> 也就是上游的一组 <code>partition</code>，以此来达到减少分区的作用</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><code>repartition</code> 算子既可以增加分区数量也可以减少分区数量，但代价是会造成 <code>shuffle</code>，所以如果是减少分区操作可以使用 <code>coalesce</code> 算子。使用 <code>coalesce</code> 算子时，如果 <code>shuffle</code> 参数为 <code>false(默认)</code> 则只能减少分区数量，如果 <code>shuffle</code> 参数为 <code>true</code> 则可以增加或减少分数数，相当于 <code>repartition</code> 算子。</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">coalesce&#96; 的主要原理为将分区划分为一个个的分组（&#96;partitionGroup&#96;），一个分组(&#96;partitionGroup&#96;) 由上游一个或多个 &#96;partition&#96; 组成，&#96;coalesce&#96; 里的 &#96;partition&#96; 就是一个 &#96;partitionGroup&#96; 所以在 &#96;coalesce&#96; 迭代一个 &#96;partition&#96; 就相当于迭代上游多个 &#96;partition</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/rlnLo2pNEfx9c/article/details/105283012">浪尖说spark的coalesce的利弊及原理</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/u011564172/article/details/53611109">Spark RDD之Partition</a></p>
+
+            </div>
+             
+            <div class="post-footer__meta">
+    <p>
+        updated at 2021-06-15
+    </p>
+</div> 
+            <div class="post-meta__cats">
+    
+    
+        <a href="/tags/Spark/" class="post-tags__link button"># Spark</a>
+    
+        <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/" class="post-tags__link button"># 大数据</a>
+    
+</div> 
+        </article>
+        
+            <div class="post__comments content-card" id="comment">
+                
+    <h4>Comments</h4>
+    
+    
+    
+    
+    
+    <div id="gitalk-container"></div>
+
+    
+    
+    
+    
+
+
+            </div>
+        
+    </div>
+
+
+</main>
+
+            <footer class="footer">
+    
+
+
+    
+    
+    
+        <span id="busuanzi_container_site_uv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_uv"></span>
+            <span>Viewers</span>
+            
+                <span>&nbsp;&nbsp;&nbsp;|</span>
+            
+        </span>
+    
+    
+        <span id="busuanzi_container_site_pv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_pv"></span>
+            <span>Views</span>
+            
+        </span>
+    
+ 
+ 
+
+ 
+    
+        
+        <p class="footer-copyright">
+            Copyright&nbsp;©&nbsp;2021&nbsp;<a href="/">大白</a>
+        </p>
+    
+    
+    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme - <a href="https://github.com/ChrAlpha/hexo-theme-cards" target="_blank">Cards</a></p>
+</footer>
+
+        </div>
+        
+    <script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.1.0/dist/lazyload.min.js"></script>
+    <script>
+        window.lazyLoadOptions = {
+            elements_selector: ".lazyload",
+            threshold: 0
+        };
+    </script>
+ 
+
+ 
+    <script>
+        window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+        ga('create', 'UA-178473615-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <script async src="https://www.google-analytics.com/analytics.js"></script>
+ 
+
+ 
+
+ 
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?fb2dded415192023dd108d2b441862de';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+ 
+
+  
+
+
+
+ 
+
+
+    
+
+
+
+    
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.css">
+
+    
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.js"></script>
+
+    <script>
+        let lazyloadT = Boolean('[object Object]'),
+            auto_fancybox = Boolean('true')
+        if (auto_fancybox) {
+            $(".post__content").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        } else {
+            $(".post__content").find("fancybox").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        }
+    </script>
+ 
+
+ 
+    <script defer src="/js/b2t.js"></script>
+
+
+
+
+
+    
+
+    
+    
+    
+
+    
+    
+    
+    <script>
+        function loadComment() {
+            let e, i;
+            (e = document.createElement("script")).src = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js',
+            document.body.appendChild(e);
+            e.onload = () => {
+                var gitalk = new Gitalk({
+                    clientID: '5343251f7191333c2cf8',
+                    clientSecret: 'c0471f2aaeafdec2f9ad0edfd4df7404db114101',
+                    repo: 'big-white-2020.github.io',
+                    owner: 'big-white-2020',
+                    admin: 'big-white-2020',
+                    id: window.location.pathname,
+                    distractionFreeMode: false
+                });
+                gitalk.render('gitalk-container');
+            };
+            (i = document.createElement("link")).rel = "stylesheet",
+            i.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css',
+            document.head.appendChild(i);
+        }
+    
+        var runningOnBrowser = typeof window !== "undefined";
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+    
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var comment_observer = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) {
+                        loadComment();
+                        comment_observer.disconnect();
+                    }
+                }, { threshold: [0] });
+                comment_observer.observe(document.getElementById('comment'));
+            } else {
+                loadComment();
+            }
+        }, 1);
+    </script>
+
+    
+    
+    
+    
+    
+    
+
+    
+
+
+
+    </body>
+</html>
