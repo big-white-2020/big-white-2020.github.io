@@ -22,5 +22,7 @@ show tables;
 
 # 查看数据表的字段信息
 desc table_name;
+
+
 ```
 
