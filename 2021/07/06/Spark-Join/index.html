@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="utf-8">
+
+    
+
+    <!-- 渲染优化 -->
+    <meta name="renderer" content="webkit">
+    <meta name="force-rendering" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta name="HandheldFriendly" content="True" >
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    <!--icon-->
+
+    <link rel="shortcut icon" type='image/x-icon' href="/favicon.ico">
+
+
+    <!-- meta -->
+
+
+<title>Spark Join | 大白</title>
+
+
+    <meta name="keywords" content="大数据, Spark, Spark SQL">
+
+
+    <!-- OpenGraph -->
+ 
+    <meta name="description" content="Join 是 SQL 中非常重要的语法，只要稍微复杂一点的场景就离不开 Join，甚至是多表 Join，如下图，Join 有三个关注点：Join 方式、Join 条件、过滤条件  图片引用自Spark SQL 之 Join 实现  Spark Join 实现方式在聊实现方式前，需要了解什么 Hash Join，hash join 是指将一个表根据 Join Key 做 hash（暂且称为查找表），">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark Join">
+<meta property="og:url" content="http://example.com/2021/07/06/Spark-Join/index.html">
+<meta property="og:site_name" content="大白">
+<meta property="og:description" content="Join 是 SQL 中非常重要的语法，只要稍微复杂一点的场景就离不开 Join，甚至是多表 Join，如下图，Join 有三个关注点：Join 方式、Join 条件、过滤条件  图片引用自Spark SQL 之 Join 实现  Spark Join 实现方式在聊实现方式前，需要了解什么 Hash Join，hash join 是指将一个表根据 Join Key 做 hash（暂且称为查找表），">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/b7e98911b3c306b4f9d5d06d12bdb6d9.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/4149557144-5dd0c87c7683b_articlex">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1*pO_40cT0UhaiSP0fdT-sWw.jpeg">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707125506944.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1*Yjw7V8mh7FipB09ngnBn6A.jpeg">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707195601815.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1*03nmwDCmVaSDWVHMZTcFjA.jpeg">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707193248812.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707192937662.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707192503866.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210706203757108.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210706204039720.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1500347041788_7705_1500347041941.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1500347061364_4191_1500347061481.png">
+<meta property="article:published_time" content="2021-07-06T12:10:20.000Z">
+<meta property="article:modified_time" content="2021-07-07T12:29:42.373Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="大数据">
+<meta property="article:tag" content="Spark">
+<meta property="article:tag" content="Spark SQL">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/b7e98911b3c306b4f9d5d06d12bdb6d9.png">
+
+
+    
+<link rel="stylesheet" href="/css/style/main.css">
+ 
+
+
+    
+<link rel="stylesheet" href="/css/style/dark.css">
+
+    
+<script src="/js/darkmode.js"></script>
+
+
+
+    
+    
+        <link rel="stylesheet" id="hl-default-theme" href="/css/highlight/github.css" media="none" onload="if(getComputedStyle(document.documentElement).getPropertyValue('--color-mode').indexOf('dark')===-1)this.media='all'">
+        
+    
+
+    
+    
+
+    
+    <link rel="stylesheet" href="/css/style/note.css" media="none" onload="this.media='all'">
+
+
+     
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+ 
+
+    <!-- custom head -->
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+    <body>
+        <div id="app">
+            <header class="header">
+    <div class="header__left">
+        <a href="/" class="button">
+            <span class="logo__text">
+                大白
+            </span>
+        </a>
+    </div>
+    <div class="header__right">
+        
+            <div class="navbar__menus">
+                
+                    <a href="/" class="navbar-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="navbar-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="navbar-menu button">
+                        归档
+                    </a>
+                
+            </div>
+        
+        
+        
+    <a href="/search/" id="btn-search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="24" height="24" fill="currentColor" stroke="currentColor" stroke-width="32"><path d="M192 448c0-141.152 114.848-256 256-256s256 114.848 256 256-114.848 256-256 256-256-114.848-256-256z m710.624 409.376l-206.88-206.88A318.784 318.784 0 0 0 768 448c0-176.736-143.264-320-320-320S128 271.264 128 448s143.264 320 320 320a318.784 318.784 0 0 0 202.496-72.256l206.88 206.88 45.248-45.248z"></path></svg>
+    </a>
+
+
+        
+        
+    <a href="javaScript:void(0);" id="btn-toggle-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </a>
+
+
+         
+    <a href="javaScript:void(0);" id="b2t" aria-label="Back to Top" title="Back to Top">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='32' height='32' fill="currentColor" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13.889,11.611c-0.17,0.17-0.443,0.17-0.612,0l-3.189-3.187l-3.363,3.36c-0.171,0.171-0.441,0.171-0.612,0c-0.172-0.169-0.172-0.443,0-0.611l3.667-3.669c0.17-0.17,0.445-0.172,0.614,0l3.496,3.493C14.058,11.167,14.061,11.443,13.889,11.611 M18.25,10c0,4.558-3.693,8.25-8.25,8.25c-4.557,0-8.25-3.692-8.25-8.25c0-4.557,3.693-8.25,8.25-8.25C14.557,1.75,18.25,5.443,18.25,10 M17.383,10c0-4.07-3.312-7.382-7.383-7.382S2.618,5.93,2.618,10S5.93,17.381,10,17.381S17.383,14.07,17.383,10"></path>
+        </svg>
+    </a>
+
+
+        
+            <a class="dropdown-icon button" id="btn-dropdown">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                    <path fill="currentColor" d="M3.314,4.8h13.372c0.41,0,0.743-0.333,0.743-0.743c0-0.41-0.333-0.743-0.743-0.743H3.314c-0.41,0-0.743,0.333-0.743,0.743C2.571,4.467,2.904,4.8,3.314,4.8z M16.686,15.2H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,15.2,16.686,15.2z M16.686,9.257H3.314c-0.41,0-0.743,0.333-0.743,0.743s0.333,0.743,0.743,0.743h13.372c0.41,0,0.743-0.333,0.743-0.743S17.096,9.257,16.686,9.257z"></path>
+                </svg>
+            </a>
+            <div class="dropdown-menus" id="dropdown-menus">
+                <a class="dropback-icon button" id="btn-dropback">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width='24' height='24' fill="none" stroke="currentColor" stroke-width="0.7" stroke-linecap="round" stroke-linejoin="round">
+                        <path fill="currentColor" d="M11.469,10l7.08-7.08c0.406-0.406,0.406-1.064,0-1.469c-0.406-0.406-1.063-0.406-1.469,0L10,8.53l-7.081-7.08c-0.406-0.406-1.064-0.406-1.469,0c-0.406,0.406-0.406,1.063,0,1.469L8.531,10L1.45,17.081c-0.406,0.406-0.406,1.064,0,1.469c0.203,0.203,0.469,0.304,0.735,0.304c0.266,0,0.531-0.101,0.735-0.304L10,11.469l7.08,7.081c0.203,0.203,0.469,0.304,0.735,0.304c0.267,0,0.532-0.101,0.735-0.304c0.406-0.406,0.406-1.064,0-1.469L11.469,10z"></path>
+                    </svg>
+                </a>
+                
+                    <a href="/" class="dropdown-menu button">
+                        首页
+                    </a>
+                
+                    <a href="/tags/" class="dropdown-menu button">
+                        标签
+                    </a>
+                
+                    <a href="/archives/" class="dropdown-menu button">
+                        归档
+                    </a>
+                
+            </div>
+            <script>
+                document.getElementById('btn-dropdown').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    requestAnimationFrame(() => {
+                        dd.style.display = 'flex';
+                        requestAnimationFrame(() => {
+                            dd.style.transform = 'translateY(0)';
+                            dd.style.opacity = '1';
+                        });
+                    });
+                });
+                document.getElementById('btn-dropback').addEventListener('click', () => {
+                    const dd = document.getElementById('dropdown-menus');
+                    dd.style.transform = 'translateY(2.25rem)';                    
+                    dd.style.opacity = '0';
+                    setTimeout(() => {dd.style.display = 'none';}, 350);
+                });
+            </script>
+        
+    </div>
+</header>
+
+
+            <main class="main">
+    
+<div class="post-title">
+    <h1 class="post-title__text">
+        Spark Join
+    </h1>
+    <div class="post-title__meta">
+        <a href="/archives/2021/07/" class="post-meta__date button">
+    2021-07-06
+</a>
+        
+ 
+        
+    
+     
+    <span id="busuanzi_container_page_pv" hidden>
+        <span class="separate-dot"></span>
+        <span></span>
+        <span id="busuanzi_value_page_pv"></span>
+        <span>Views</span>
+    </span>
+
+
+
+ 
+
+ 
+    </div>
+</div>
+
+
+    <div class="post__with-side">
+        <aside class="post-side">
+            <div class="post-side__toc">
+                <ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Spark-Join-%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="toc-number">1.</span> <span class="toc-text">Spark Join 实现方式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Broadcast-Hash-Join"><span class="toc-number">1.1.</span> <span class="toc-text">Broadcast Hash Join</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Shuffle-Hash-Join"><span class="toc-number">1.2.</span> <span class="toc-text">Shuffle Hash Join</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Sort-Merge-Join"><span class="toc-number">1.3.</span> <span class="toc-text">Sort Merge Join</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Broadcast-nested-loop-join"><span class="toc-number">1.4.</span> <span class="toc-text">Broadcast nested loop join</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Cartesian-product-join-Shuffle-and-replicate-nested-loop-join"><span class="toc-number">1.5.</span> <span class="toc-text">Cartesian product join(Shuffle-and-replicate nested loop join)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Join-%E6%96%B9%E5%BC%8F%E9%80%89%E6%8B%A9"><span class="toc-number">1.6.</span> <span class="toc-text">Join 方式选择</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Spark-%E4%B8%AD%E7%89%B9%E6%AE%8A%E7%9A%84-Join"><span class="toc-number">2.</span> <span class="toc-text">Spark 中特殊的 Join</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#left-semi-join"><span class="toc-number">2.1.</span> <span class="toc-text">left semi join</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#left-anti-join"><span class="toc-number">2.2.</span> <span class="toc-text">left anti join</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-number">2.3.</span> <span class="toc-text">参考资料</span></a></li></ol></li></ol>
+            </div>
+        </aside>
+        <article class="post content-card">
+            <div class="post__header">
+                 
+                
+            </div>
+            <div class="post__content">
+                <p>Join 是 SQL 中非常重要的语法，只要稍微复杂一点的场景就离不开 Join，甚至是多表 Join，如下图，Join 有三个关注点：Join 方式、Join 条件、过滤条件</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/b7e98911b3c306b4f9d5d06d12bdb6d9.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/b7e98911b3c306b4f9d5d06d12bdb6d9.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="img"></p>
+<center>图片引用自<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1005502">Spark SQL 之 Join 实现</a></center>
+
+<h3 id="Spark-Join-实现方式"><a href="#Spark-Join-实现方式" class="headerlink" title="Spark Join 实现方式"></a>Spark Join 实现方式</h3><p>在聊实现方式前，需要了解什么 Hash Join，hash join 是指将一个表根据 Join Key 做 hash（暂且称为<strong>查找表</strong>），然后遍历另一个表（暂且称为<strong>遍历表</strong>），遍历时在 hash 表中根据 join key 查找，这样时间复杂度就是 O(M(遍历一个表) + 1(hash 查找))，入下图，Build Table 为查找表，Probe Table 为遍历表</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/4149557144-5dd0c87c7683b_articlex" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/4149557144-5dd0c87c7683b_articlex" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="file"></p>
+<center>图片引用自<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000021033287">Spark难点 | Join的实现原理</a></center>
+
+<h4 id="Broadcast-Hash-Join"><a href="#Broadcast-Hash-Join" class="headerlink" title="Broadcast Hash Join"></a>Broadcast Hash Join</h4><p>ok，对 hash join 了解后，再来聊聊  <code>Broadcast Hash Join</code>。在 join 过程中有这么一种情况——一张很大的表 join 一张很小的表（一般是维表），这时如果对大表做 shuffle 代价可能比较大，Spark 会对这种情况进行优化，将小表作为广播变量广播到各个节点中，然后在节点中做 hash join。这样对一个大表的 shuffle 就变成对一个小表的广播，而 Spark 广播变量使用 <code>BitTorrent</code> 进行优化(感兴趣可以点这<a target="_blank" rel="noopener" href="https://big-white-2020.github.io/2021/06/24/Spark-Accumulator-Broadcast/">Spark Accumulator &amp; Broadcast</a>)，性能比 Shuffle 有很大的提省，只要每个节点的大表分区做一个 map 就可以完成，这种方式也被称为 map join。</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1*pO_40cT0UhaiSP0fdT-sWw.jpeg" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1*pO_40cT0UhaiSP0fdT-sWw.jpeg" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="img"></p>
+<center>图片引用自<a target="_blank" rel="noopener" href="https://towardsdatascience.com/strategies-of-spark-join-c0e7b4572bcf">Spark Join Strategies — How & What?</a></center>
+
+<p>虽然 <code>Broadcast Hash Join</code> 的方式快，但是随着广播的表大小增长，性能也逐渐下降，所以 Spark 只会将小于 <code>spark.sql.autoBroadcastJoinThreshold</code> (默认 10M)的表采用 <code>Broadcast Hash Join</code>，<code>spark.sql.autoBroadcastJoinThreshold</code> 参数设置为 -1，可以关闭 BHJ，实现可见 <code>org.apache.spark.sql.execution.joins.BroadcastHashJoinExec</code></p>
+<p>特点：</p>
+<ul>
+<li>只能用于等值连接</li>
+<li>除了 <code>full outer join</code>，支持所有 join</li>
+<li>广播表大小 &lt; <code>spark.sql.autoBroadcastJoinThreshold</code> (default 10M)</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> df = <span class="type">Seq</span>((<span class="number">0</span>, <span class="string">&quot;a&quot;</span>), (<span class="number">1</span>, <span class="string">&quot;b&quot;</span>), (<span class="number">2</span>, <span class="string">&quot;c&quot;</span>)).toDF(<span class="string">&quot;id&quot;</span>, <span class="string">&quot;value&quot;</span>)</span><br><span class="line"><span class="keyword">val</span> frame = df.join(df, <span class="type">Seq</span>(<span class="string">&quot;id&quot;</span>), <span class="string">&quot;left&quot;</span>)</span><br><span class="line">frame.explain()</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707125506944.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707125506944.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20210707125506944"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x3D;&#x3D; Physical Plan &#x3D;&#x3D;</span><br><span class="line">CollectLimit 21</span><br><span class="line">+- *Project [id#5, value#6, value#11]</span><br><span class="line">   +- *BroadcastHashJoin [id#5], [id#10], LeftOuter, BuildRight</span><br><span class="line">      :- LocalTableScan [id#5, value#6]</span><br><span class="line">      +- BroadcastExchange HashedRelationBroadcastMode(List(cast(input[0, int, false] as bigint)))</span><br><span class="line">         +- LocalTableScan [id#10, value#11]</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="Shuffle-Hash-Join"><a href="#Shuffle-Hash-Join" class="headerlink" title="Shuffle Hash Join"></a>Shuffle Hash Join</h4><p>当 <code>Broadcast Table</code> 大到一定程度后，将整个表广播已经不太划算了，还不如 shuffle。这就会用到 <code>Shuffle Hash Join</code>，Spark 会根据 <code>Join Key</code> 进行 shuffle，那么相同的 key 一定都在同一个节点中，再根据 Hash Join 的方式进行单机 Join</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1*Yjw7V8mh7FipB09ngnBn6A.jpeg" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1*Yjw7V8mh7FipB09ngnBn6A.jpeg" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="img"></p>
+<center>图片引用自<a target="_blank" rel="noopener" href="https://towardsdatascience.com/strategies-of-spark-join-c0e7b4572bcf">Spark Join Strategies — How & What?</a></center>
+
+<p><code>Shuffle Hash Join</code> 需要在内存中建立 hash table 所以有 OOM 风险，使用 <code>Shuffle Hash Join</code> 的前提为 <code>spark.sql.join.preferSortMergeJoin</code> 必须为 <code>false</code>，实现见 <code>org.apache.spark.sql.execution.joins.ShuffledHashJoinExec</code></p>
+<p>特点：</p>
+<ul>
+<li>只支持等值连接</li>
+<li>除了 <code>full outer join</code>，支持所有 join</li>
+<li><code>spark.sql.join.preferSortMergeJoin</code>  必须为 false</li>
+<li>小表的大小 &lt; <code>spark.sql.autoBroadcastJoinThreshold</code>(default 10M) * <code>spark.sql.shuffle.partitions</code>(default 200)</li>
+<li>小表的大小 * 3 &lt;= 大表大小</li>
+</ul>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707195601815.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707195601815.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20210707195601815"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x3D;&#x3D; Physical Plan &#x3D;&#x3D;</span><br><span class="line">CollectLimit 21</span><br><span class="line">+- *Project [id#5, value#6, value#16]</span><br><span class="line">   +- ShuffledHashJoin [id#5], [id#15], Inner, BuildRight</span><br><span class="line">      :- Exchange hashpartitioning(id#5, 200)</span><br><span class="line">      :  +- LocalTableScan [id#5, value#6]</span><br><span class="line">      +- Exchange hashpartitioning(id#15, 200)</span><br><span class="line">         +- LocalTableScan [id#15, value#16]</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="Sort-Merge-Join"><a href="#Sort-Merge-Join" class="headerlink" title="Sort Merge Join"></a>Sort Merge Join</h4><p>既然 Shuffle 不可避免，那么有没有其他优化的方式呢？Spark Shuffle 对排序有着很好的支持，所以在 <code>Shuffle Write</code>完之后，两个表都是局部有序的，那么可不可以在 <code>Shuffle Read</code> 阶段就完成 Join。由于两个表根据 <code>Join Key</code> 分区数据都是有序的，那么在 <code>Shuffle Read</code> 时，可以根据采用 Hash Join 的思想，只不过这次的查找表不是 hash 查找，而是顺序查找。对遍历表一条一条遍历，对查找表顺序查找，下一条数据只要从当前位置查找即可，不需要从头开始查找。当 <code>Shuffle</code> 完成时，<code>Join</code> 也就完成了。</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1*03nmwDCmVaSDWVHMZTcFjA.jpeg" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1*03nmwDCmVaSDWVHMZTcFjA.jpeg" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="img"></p>
+<center>图片引用自<a target="_blank" rel="noopener" href="https://towardsdatascience.com/strategies-of-spark-join-c0e7b4572bcf">Spark Join Strategies — How & What?</a></center>
+
+<p>显然，如果要使用 <code>Sort Merge Join</code> ，<code>Join Key</code> 必须是可排序的，实现可见 <code>org.apache.spark.sql.execution.joins.SortMergeJoinExec</code></p>
+<p>特点：</p>
+<ul>
+<li>只支持等值连接</li>
+<li>支持所有类型的 join</li>
+<li>Join key 必须可排序</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> df = <span class="type">Seq</span>((<span class="number">0</span>, <span class="string">&quot;a&quot;</span>), (<span class="number">1</span>, <span class="string">&quot;b&quot;</span>), (<span class="number">2</span>, <span class="string">&quot;c&quot;</span>)).toDF(<span class="string">&quot;id&quot;</span>, <span class="string">&quot;value&quot;</span>) </span><br><span class="line"><span class="keyword">val</span> df1 = <span class="type">Seq</span>((<span class="number">0</span>, <span class="string">&quot;a&quot;</span>), (<span class="number">1</span>, <span class="string">&quot;b&quot;</span>), (<span class="number">2</span>, <span class="string">&quot;c&quot;</span>)).toDF(<span class="string">&quot;id&quot;</span>, <span class="string">&quot;value&quot;</span>)</span><br><span class="line">                                                               </span><br><span class="line"><span class="keyword">val</span> frame = df.join(df1, <span class="type">Seq</span>(<span class="string">&quot;id&quot;</span>), <span class="string">&quot;left&quot;</span>)                    </span><br><span class="line">frame.explain()                                                </span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707193248812.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707193248812.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20210707193248812"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x3D;&#x3D; Physical Plan &#x3D;&#x3D;</span><br><span class="line">CollectLimit 21</span><br><span class="line">+- *Project [id#5, value#6, value#16]</span><br><span class="line">   +- SortMergeJoin [id#5], [id#15], LeftOuter</span><br><span class="line">      :- *Sort [id#5 ASC NULLS FIRST], false, 0</span><br><span class="line">      :  +- Exchange hashpartitioning(id#5, 200)</span><br><span class="line">      :     +- LocalTableScan [id#5, value#6]</span><br><span class="line">      +- *Sort [id#15 ASC NULLS FIRST], false, 0</span><br><span class="line">         +- Exchange hashpartitioning(id#15, 200)</span><br><span class="line">            +- LocalTableScan [id#15, value#16]</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="Broadcast-nested-loop-join"><a href="#Broadcast-nested-loop-join" class="headerlink" title="Broadcast nested loop join"></a>Broadcast nested loop join</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">for record_1 in table_1</span><br><span class="line">	for record_2 in table_2</span><br><span class="line">		&#x2F;&#x2F; join</span><br></pre></td></tr></table></figure>
+
+<p>如上面代码所示，<code>Broadcast nested loop join</code> 通过循环嵌套的方式进行 join，效率非常低。具体实现见 <code>org.apache.spark.sql.execution.joins.BroadcastNestedLoopJoinExec</code></p>
+<p>特点：</p>
+<ul>
+<li>支持等值和不等值连接</li>
+<li>支持所有类型的 join</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 需要配置</span></span><br><span class="line"><span class="comment">// spark.conf.set(&quot;spark.sql.crossJoin.enabled&quot;, &quot;true&quot;)</span></span><br><span class="line"><span class="keyword">val</span> df = <span class="type">Seq</span>((<span class="number">0</span>, <span class="string">&quot;a&quot;</span>), (<span class="number">1</span>, <span class="string">&quot;b&quot;</span>), (<span class="number">2</span>, <span class="string">&quot;c&quot;</span>)).toDF(<span class="string">&quot;id&quot;</span>, <span class="string">&quot;value&quot;</span>)          </span><br><span class="line"><span class="keyword">val</span> df1 = <span class="type">Seq</span>((<span class="number">0</span>, <span class="string">&quot;a&quot;</span>), (<span class="number">1</span>, <span class="string">&quot;b&quot;</span>), (<span class="number">2</span>, <span class="string">&quot;c&quot;</span>)).toDF(<span class="string">&quot;id&quot;</span>, <span class="string">&quot;value&quot;</span>)         </span><br><span class="line">                                                                        </span><br><span class="line"><span class="keyword">val</span> frame = df.join(df1, <span class="type">Nil</span>, <span class="string">&quot;left&quot;</span>)                              </span><br><span class="line">frame.explain()                                                         </span><br></pre></td></tr></table></figure>
+
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707192937662.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707192937662.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20210707192937662"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x3D;&#x3D; Physical Plan &#x3D;&#x3D;</span><br><span class="line">CollectLimit 21</span><br><span class="line">+- BroadcastNestedLoopJoin BuildRight, LeftOuter</span><br><span class="line">   :- *LocalLimit 21</span><br><span class="line">   :  +- LocalTableScan [id#5, value#6]</span><br><span class="line">   +- BroadcastExchange IdentityBroadcastMode</span><br><span class="line">      +- LocalTableScan [id#15, value#16]</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h4 id="Cartesian-product-join-Shuffle-and-replicate-nested-loop-join"><a href="#Cartesian-product-join-Shuffle-and-replicate-nested-loop-join" class="headerlink" title="Cartesian product join(Shuffle-and-replicate nested loop join)"></a>Cartesian product join(Shuffle-and-replicate nested loop join)</h4><p>笛卡尔积 join，与普通 SQL 一样，如果 join 时不加连接条件就会产生笛卡尔积连接。具体实现可以看看 <code>org.apache.spark.sql.execution.joins.CartesianProductExec</code></p>
+<p>特点：</p>
+<ul>
+<li>支持等值和不等值连接</li>
+<li>只支持 inner join</li>
+</ul>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">// 需要配置</span></span><br><span class="line"><span class="comment">// spark.conf.set(&quot;spark.sql.crossJoin.enabled&quot;, &quot;true&quot;)</span></span><br><span class="line"><span class="keyword">val</span> df = <span class="type">Seq</span>((<span class="number">0</span>, <span class="string">&quot;a&quot;</span>), (<span class="number">1</span>, <span class="string">&quot;b&quot;</span>), (<span class="number">2</span>, <span class="string">&quot;c&quot;</span>)).toDF(<span class="string">&quot;id&quot;</span>, <span class="string">&quot;value&quot;</span>)</span><br><span class="line"><span class="keyword">val</span> df1 = <span class="type">Seq</span>((<span class="number">0</span>, <span class="string">&quot;a&quot;</span>), (<span class="number">1</span>, <span class="string">&quot;b&quot;</span>), (<span class="number">2</span>, <span class="string">&quot;c&quot;</span>)).toDF(<span class="string">&quot;id&quot;</span>, <span class="string">&quot;value&quot;</span>)</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> frame = df.crossJoin(df1)</span><br><span class="line">frame.explain()</span><br></pre></td></tr></table></figure>
+
+<p>需要开启 <code>spark.conf.set(&quot;spark.sql.crossJoin.enabled&quot;, &quot;true&quot;)</code></p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707192503866.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210707192503866.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20210707192503866"></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&#x3D;&#x3D; Physical Plan &#x3D;&#x3D;</span><br><span class="line">CollectLimit 21</span><br><span class="line">+- CartesianProduct</span><br><span class="line">   :- LocalTableScan [id#5, value#6]</span><br><span class="line">   +- LocalTableScan [id#15, value#16]</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="Join-方式选择"><a href="#Join-方式选择" class="headerlink" title="Join 方式选择"></a>Join 方式选择</h4><p>既然有这么多种 Join 方式，那么 Spark 是怎么选择合适的 Join 方式呢？</p>
+<p>Spark 根据等值和非等值连接进行划分</p>
+<p><strong>等值连接</strong></p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210706203757108.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210706203757108.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20210706203757108"></p>
+<p>其中用户选择遵循下方代码顺序</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">createJoinWithoutHint</span></span>() = &#123;                                                           </span><br><span class="line">  createBroadcastHashJoin(                                                                </span><br><span class="line">    canBroadcast(left) &amp;&amp; !hint.leftHint.exists(_.strategy.contains(<span class="type">NO_BROADCAST_HASH</span>)),  </span><br><span class="line">    canBroadcast(right) &amp;&amp; !hint.rightHint.exists(_.strategy.contains(<span class="type">NO_BROADCAST_HASH</span>)))</span><br><span class="line">    .orElse &#123;                                                                              </span><br><span class="line">      <span class="keyword">if</span> (!conf.preferSortMergeJoin) &#123;                                                     </span><br><span class="line">        createShuffleHashJoin(                                                             </span><br><span class="line">          canBuildLocalHashMap(left) &amp;&amp; muchSmaller(left, right),                          </span><br><span class="line">          canBuildLocalHashMap(right) &amp;&amp; muchSmaller(right, left))                         </span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;                                                                             </span><br><span class="line">        <span class="type">None</span>                                                                               </span><br><span class="line">      &#125;                                                                                    </span><br><span class="line">    &#125;                                                                                      </span><br><span class="line">    .orElse(createSortMergeJoin())                                                         </span><br><span class="line">    .orElse(createCartesianProduct())                                                      </span><br><span class="line">    .getOrElse &#123;                                                                           </span><br><span class="line">      <span class="comment">// This join could be very slow or OOM                                               </span></span><br><span class="line">      <span class="keyword">val</span> buildSide = getSmallerSide(left, right)                                          </span><br><span class="line">      <span class="type">Seq</span>(joins.<span class="type">BroadcastNestedLoopJoinExec</span>(                                               </span><br><span class="line">        planLater(left), planLater(right), buildSide, joinType, nonEquiCond))              </span><br><span class="line">    &#125;                                                                                      </span><br><span class="line">&#125;                                                                                         </span><br></pre></td></tr></table></figure>
+
+<p>即 <code>Broadcast Hash Join</code>, <code>Sort Merge Join</code>, <code>Shuffle Hash Join</code>, <code>Cartesian Product Join</code>, <code>Broadcast Nested Loop Join</code> 的顺序</p>
+<p><strong>非等值连接</strong></p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210706204039720.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/image-20210706204039720.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="image-20210706204039720"></p>
+<p>用户选择顺序为：</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">createBroadcastNLJoin(hintToBroadcastLeft(hint), hintToBroadcastRight(hint))</span><br><span class="line">	.orElse &#123; <span class="keyword">if</span> (hintToShuffleReplicateNL(hint)) createCartesianProduct() <span class="keyword">else</span> <span class="type">None</span> &#125;</span><br><span class="line">	.getOrElse(createJoinWithoutHint())</span><br></pre></td></tr></table></figure>
+
+<p>即 <code>Broadcast Nested Loop Join</code>,  <code>Cartesian Product Join</code>。上图有两次 <code>Broadcast Nested Loop Join</code>，是因为第一次 <code>Broadcast Nested Loop Join</code> 会先尝试是否能广播左表或者右表，如果都不能则选择 <code>Cartesian Product Join</code>，最后再用 <code>Broadcast Nested Loop Join</code> 兜底</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">createJoinWithoutHint</span></span>() = &#123;</span><br><span class="line">  createBroadcastNLJoin(canBroadcast(left), canBroadcast(right))</span><br><span class="line">    .orElse(createCartesianProduct())</span><br><span class="line">    .getOrElse &#123;</span><br><span class="line">      <span class="comment">// This join could be very slow or OOM</span></span><br><span class="line">      <span class="type">Seq</span>(</span><br><span class="line">        joins.<span class="type">BroadcastNestedLoopJoinExec</span>(</span><br><span class="line">          planLater(left), planLater(right), desiredBuildSide, joinType, condition))</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="Spark-中特殊的-Join"><a href="#Spark-中特殊的-Join" class="headerlink" title="Spark 中特殊的 Join"></a>Spark 中特殊的 Join</h3><h4 id="left-semi-join"><a href="#left-semi-join" class="headerlink" title="left semi join"></a>left semi join</h4><p><code>left semi join</code> 是以左表为准，如果查找成功就返回左表的记录，如果查找失败则返回 null，如下图所示。</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1500347041788_7705_1500347041941.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1500347041788_7705_1500347041941.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="img"></p>
+<center>图片引用自<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1005502">Spark SQL 之 Join 实现</a></center>
+
+<h4 id="left-anti-join"><a href="#left-anti-join" class="headerlink" title="left anti join"></a>left anti join</h4><p><code>left anti join</code> 则是与 <code>left semi join</code> 相反，也是以左表为准，如果查找成功就返回 null，如果查找失败则返回左表记录，如下图</p>
+<p><img src="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1500347061364_4191_1500347061481.png" class="lazyload" data-srcset="https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/1500347061364_4191_1500347061481.png" srcset="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAABlBMVEXMzMyWlpYU2uzLAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAACklEQVQImWNgAAAAAgAB9HFkpgAAAABJRU5ErkJggg==" alt="img"></p>
+<center>图片引用自<a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1005502">Spark SQL 之 Join 实现</a></center>
+
+<p>我不知道这两种特殊的 Join 方式是不是 Spark 特有的，但是是我学习 Spark 之后才知道有这两种 Join 方式</p>
+<h4 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h4><p><a target="_blank" rel="noopener" href="https://towardsdatascience.com/strategies-of-spark-join-c0e7b4572bcf">Spark Join Strategies — How &amp; What?</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/wypblog/article/details/108570977">每个 Spark 工程师都应该知道的五种 Join 策略</a></p>
+<p><a target="_blank" rel="noopener" href="https://cloud.tencent.com/developer/article/1005502">Spark SQL 之 Join 实现</a></p>
+
+            </div>
+             
+            <div class="post-footer__meta">
+    <p>
+        updated at 2021-07-07
+    </p>
+</div> 
+            <div class="post-meta__cats">
+    
+    
+        <a href="/tags/%E5%A4%A7%E6%95%B0%E6%8D%AE/" class="post-tags__link button"># 大数据</a>
+    
+        <a href="/tags/Spark/" class="post-tags__link button"># Spark</a>
+    
+        <a href="/tags/Spark-SQL/" class="post-tags__link button"># Spark SQL</a>
+    
+</div> 
+        </article>
+        
+            <div class="post__comments content-card" id="comment">
+                
+    <h4>Comments</h4>
+    
+    
+    
+    
+    
+    <div id="gitalk-container"></div>
+
+    
+    
+    
+    
+
+
+            </div>
+        
+    </div>
+
+
+</main>
+
+            <footer class="footer">
+    
+
+
+    
+    
+    
+        <span id="busuanzi_container_site_uv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_uv"></span>
+            <span>Viewers</span>
+            
+                <span>&nbsp;&nbsp;&nbsp;|</span>
+            
+        </span>
+    
+    
+        <span id="busuanzi_container_site_pv" hidden>
+            <span></span>
+            <span id="busuanzi_value_site_pv"></span>
+            <span>Views</span>
+            
+        </span>
+    
+ 
+ 
+
+ 
+    
+        
+        <p class="footer-copyright">
+            Copyright&nbsp;©&nbsp;2021&nbsp;<a href="/">大白</a>
+        </p>
+    
+    
+    <p>Powered by <a href="https://hexo.io" target="_blank">Hexo</a> | Theme - <a href="https://github.com/ChrAlpha/hexo-theme-cards" target="_blank">Cards</a></p>
+</footer>
+
+        </div>
+        
+    <script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.1.0/dist/lazyload.min.js"></script>
+    <script>
+        window.lazyLoadOptions = {
+            elements_selector: ".lazyload",
+            threshold: 0
+        };
+    </script>
+ 
+
+ 
+    <script>
+        window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+        ga('create', 'UA-178473615-1', 'auto');
+        ga('send', 'pageview');
+    </script>
+    <script async src="https://www.google-analytics.com/analytics.js"></script>
+ 
+
+ 
+
+ 
+    <script>
+        var _hmt = _hmt || [];
+        (function() {
+            var hm = document.createElement('script');
+            hm.src = 'https://hm.baidu.com/hm.js?fb2dded415192023dd108d2b441862de';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(hm, s);
+        })();
+    </script>
+ 
+
+  
+
+
+
+ 
+
+
+    
+
+
+
+    
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js"></script>
+
+    
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.css">
+
+    
+<script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.4.1/dist/jquery.fancybox.min.js"></script>
+
+    <script>
+        let lazyloadT = Boolean('[object Object]'),
+            auto_fancybox = Boolean('true')
+        if (auto_fancybox) {
+            $(".post__content").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        } else {
+            $(".post__content").find("fancybox").find('img').each(function () {
+                var element = document.createElement("a");
+                $(element).attr("data-fancybox", "gallery");
+                $(element).attr("href", $(this).attr("src"));
+                if (lazyloadT) {
+                    $(element).attr("href", $(this).attr("data-srcset"));
+                }
+                $(this).wrap(element);
+            });
+        }
+    </script>
+ 
+
+ 
+    <script defer src="/js/b2t.js"></script>
+
+
+
+
+
+    
+
+    
+    
+    
+
+    
+    
+    
+    <script>
+        function loadComment() {
+            let e, i;
+            (e = document.createElement("script")).src = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js',
+            document.body.appendChild(e);
+            e.onload = () => {
+                var gitalk = new Gitalk({
+                    clientID: '5343251f7191333c2cf8',
+                    clientSecret: 'c0471f2aaeafdec2f9ad0edfd4df7404db114101',
+                    repo: 'big-white-2020.github.io',
+                    owner: 'big-white-2020',
+                    admin: 'big-white-2020',
+                    id: window.location.pathname,
+                    distractionFreeMode: false
+                });
+                gitalk.render('gitalk-container');
+            };
+            (i = document.createElement("link")).rel = "stylesheet",
+            i.href = 'https://cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css',
+            document.head.appendChild(i);
+        }
+    
+        var runningOnBrowser = typeof window !== "undefined";
+        var isBot = runningOnBrowser && !("onscroll" in window) || typeof navigator !== "undefined" && /(gle|ing|ro|msn)bot|crawl|spider|yand|duckgo/i.test(navigator.userAgent);
+        var supportsIntersectionObserver = runningOnBrowser && "IntersectionObserver" in window;
+    
+        setTimeout(function () {
+            if (!isBot && supportsIntersectionObserver) {
+                var comment_observer = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) {
+                        loadComment();
+                        comment_observer.disconnect();
+                    }
+                }, { threshold: [0] });
+                comment_observer.observe(document.getElementById('comment'));
+            } else {
+                loadComment();
+            }
+        }, 1);
+    </script>
+
+    
+    
+    
+    
+    
+    
+
+    
+
+
+
+    </body>
+</html>
