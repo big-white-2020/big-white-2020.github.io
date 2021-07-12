@@ -6,7 +6,7 @@ tag : [Spark, 大数据]
 
 
 
-**1. Spark消费 Kafka，分布式的情况下，如何保证消息的顺序?**
+### **Spark消费 Kafka，分布式的情况下，如何保证消息的顺序?**
 
 Kafka 分布式的单位是 Partition。如何保证消息有序，需要分几个情况讨论。
 
@@ -28,7 +28,7 @@ Kafka 中发送1条消息的时候，可以指定(topic, partition, key) 3个参
 
 参考：https://www.cnblogs.com/haoxinyue/p/5743775.html
 
-**2. 对于 Spark 中的数据倾斜问题你有什么好的方案？**
+### **对于 Spark 中的数据倾斜问题你有什么好的方案？**
 
 简单一句: Spark 数据倾斜的几种场景以及对应的解决方案，包括避免数据源倾斜，调整并行度，使用自定义 Partitioner，使用 Map 侧 Join 代替 Reduce 侧 Join（内存表合并），给倾斜 Key 加上随机前缀等。
 
@@ -48,15 +48,15 @@ Kafka 中发送1条消息的时候，可以指定(topic, partition, key) 3个参
 
 5. 大表随机添加 N 种随机前缀，小表扩大 N 倍: 如果出现数据倾斜的 Key 比较多，上一种方法将这些大量的倾斜 Key 分拆出来，意义不大（很难一个 Key 一个 Key 都加上后缀）。此时更适合直接对存在数据倾斜的数据集全部加上随机前缀，然后对另外一个不存在严重数据倾斜的数据集整体与随机前缀集作笛卡尔乘积（即将数据量扩大 N 倍），可以看到 RDD2 扩大了 N 倍了，再和加完前缀的大数据做笛卡尔积。
 
-**3. 你所理解的 Spark 的 shuffle 过程？**
+### **你所理解的 Spark 的 shuffle 过程？**
 
 Spark shuffle 处于一个宽依赖，可以实现类似混洗的功能，将相同的 Key 分发至同一个 Reducer上进行处理。
 
-**4. Spark有哪些聚合类的算子,我们应该尽量避免什么类型的算子？**
+### **Spark有哪些聚合类的算子,我们应该尽量避免什么类型的算子？**
 
 在我们的开发过程中，能避免则尽可能避免使用 reduceByKey、join、distinct、repartition 等会进行 shuffle 的算子，尽量使用 map 类的非 shuffle 算子。这样的话，没有 shuffle 操作或者仅有较少 shuffle 操作的 Spark 作业，可以大大减少性能开销。
 
-**5. spark on yarn 作业执行流程，yarn-client 和 yarn cluster 有什么区别**
+### **spark on yarn 作业执行流程，yarn-client 和 yarn cluster 有什么区别**
 
 Spark On Yarn 的优势
 
@@ -80,7 +80,7 @@ yarn-client 和 yarn cluster 的异同 1. 从广义上讲，yarn-cluster 适用�
 
 
 
-**6. Spark为什么快，Spark SQL 一定比 Hive 快吗**
+### **Spark为什么快，Spark SQL 一定比 Hive 快吗**
 
 Spark SQL 比 Hadoop Hive 快，是有一定条件的，而且不是 Spark SQL 的引擎比 Hive 的引擎快，相反，Hive 的 HQL 引擎还比 Spark SQL 的引擎更快。其实，关键还是在于 Spark 本身快。
 
@@ -108,7 +108,7 @@ Select month_id, sum(sales) from T group by month_id;
 
 结论 Spark 快不是绝对的，但是绝大多数，Spark 都比 Hadoop 计算要快。这主要得益于其对 mapreduce 操作的优化以及对 JVM 使用的优化。
 
-**7. RDD, DAG, Stage怎么理解？**
+### **RDD, DAG, Stage怎么理解？**
 
 DAG Spark 中使用 DAG 对 RDD 的关系进行建模，描述了 RDD 的依赖关系，这种关系也被称之为 lineage（血缘），RDD 的依赖关系使用 Dependency 维护。DAG 在 Spark 中的对应的实现为 DAGScheduler。
 
@@ -118,13 +118,13 @@ RDD 的算子主要分成2类，action 和 transformation。这里的算子概�
 
 Stage 在 DAG 中又进行 stage 的划分，划分的依据是依赖是否是 shuffle 的，每个 stage 又可以划分成若干 task。接下来的事情就是 driver 发送 task 到 executor，executor 自己的线程池去执行这些 task，完成之后将结果返回给 driver。action 算子是划分不同 job 的依据。
 
-**8. RDD 如何通过记录更新的方式容错**
+### **RDD 如何通过记录更新的方式容错**
 
 RDD 的容错机制实现分布式数据集容错方法有两种: 1. 数据检查点 2. 记录更新。
 
 RDD 采用记录更新的方式：记录所有更新点的成本很高。所以，RDD只支持粗颗粒变换，即只记录单个块（分区）上执行的单个操作，然后创建某个 RDD 的变换序列（血统 lineage）存储下来；变换序列指，每个 RDD 都包含了它是如何由其他 RDD 变换过来的以及如何重建某一块数据的信息。因此 RDD 的容错机制又称“血统”容错。
 
-**9. 宽依赖、窄依赖怎么理解？**
+### **宽依赖、窄依赖怎么理解？**
 
 窄依赖指的是每一个 parent RDD 的 partition 最多被子 RDD 的一个 partition 使用（一子一亲）。
 
@@ -136,7 +136,7 @@ RDD 作为数据结构，本质上是一个只读的分区记录集合。一个 
 
 其次，则是从失败恢复的角度考虑。窄依赖的失败恢复更有效，因为它只需要重新计算丢失的 parent partition 即可，而且可以并行地在不同节点进行重计算（一台机器太慢就会分配到多个节点进行），相反，宽依赖牵涉 RDD 各级的多个 parent partition。
 
-**10. Job 和 Task 怎么理解**
+### **Job 和 Task 怎么理解**
 
 Job Spark 的 Job 来源于用户执行 action 操作（这是 Spark 中实际意义的 Job），就是从 RDD 中获取结果的操作，而不是将一个 RDD 转换成另一个 RDD 的 transformation 操作。
 
@@ -146,21 +146,21 @@ Task 一个 Stage 内，最终的 RDD 有多少个 partition，就会产生多�
 
 
 
-**11. Spark 血统的概念**
+### **Spark 血统的概念**
 
 RDD 的 lineage 记录的是粗颗粒度的特定数据转换（transformation）操作（filter, map, join etc.)行为。当这个 RDD 的部分分区数据丢失时，它可以通过 lineage 获取足够的信息来重新运算和恢复丢失的数据分区。这种粗颗粒的数据模型，限制了 Spark 的运用场合，但同时相比细颗粒度的数据模型，也带来了性能的提升。
 
-**12. 任务的概念**
+### **任务的概念**
 
 包含很多 task 的并行计算，可以认为是 Spark RDD 里面的 action，每个 action 的计算会生成一个 job。用户提交的 job 会提交给 DAGScheduler，job 会被分解成 Stage 和 Task。
 
-**13. 容错方法**
+### **容错方法**
 
 Spark 选择记录更新的方式。但是，如果更新粒度太细太多，那么记录更新成本也不低。因此，RDD只支持粗粒度转换，即只记录单个块上执行的单个操作，然后将创建 RDD 的一系列变换序列（每个 RDD 都包含了他是如何由其他 RDD 变换过来的以及如何重建某一块数据的信息。因此 RDD 的容错机制又称血统容错）记录下来，以便恢复丢失的分区。lineage本质上很类似于数据库中的重做日志（Redo Log），只不过这个重做日志粒度很大，是对全局数据做同样的重做进而恢复数据。
 
 相比其他系统的细颗粒度的内存数据更新级别的备份或者 LOG 机制，RDD 的 lineage 记录的是粗颗粒度的特定数据 transformation 操作行为。当这个 RDD 的部分分区数据丢失时，它可以通过 lineage 获取足够的信息来重新运算和恢复丢失的数据分区。
 
-**14. Spark 粗粒度和细粒度**
+### Spark 粗粒度和细粒度
 
 如果问的是操作的粗细粒度，应该是，Spark 在错误恢复的时候，只需要粗粒度的记住 lineage，就可实现容错。
 
@@ -186,13 +186,13 @@ Spark中，每个 application 对应一个 SparkContext。对于 SparkContext �
 
    在这种模式下，应用不执行时的空闲 CPU 资源得以被其他用户使用，提升了 CPU 使用率。
 
-**15. Spark优越性**
+### **Spark优越性**
 
 一、Spark 的5大优势：1. 更高的性能。因为数据被加载到集群主机的分布式内存中。数据可以被快速的转换迭代，并缓存用以后续的频繁访问需求。在数据全部加载到内存的情况下，Spark可以比Hadoop快100倍，在内存不够存放所有数据的情况下快hadoop10倍。2. 通过建立在Java,Scala,Python,SQL（应对交互式查询）的标准API以方便各行各业使用，同时还含有大量开箱即用的机器学习库。3. 与现有Hadoop 1和2.x(YARN)生态兼容，因此机构可以无缝迁移。4. 方便下载和安装。方便的shell（REPL: Read-Eval-Print-Loop）可以对API进行交互式的学习。5. 借助高等级的架构提高生产力，从而可以讲精力放到计算上。
 
 二、MapReduce与Spark相比，有哪些异同点：1、基本原理上：（1） MapReduce：基于磁盘的大数据批量处理系统 （2）Spark：基于RDD(弹性分布式数据集)数据处理，显示将RDD数据存储到磁盘和内存中。2、模型上：（1） MapReduce可以处理超大规模的数据，适合日志分析挖掘等较少的迭代的长任务需求，结合了数据的分布式的计算。（2） Spark：适合数据的挖掘，机器学习等多轮迭代式计算任务。
 
-**16. Transformation和action是什么？区别？举几个常用方法**
+### Transformation和action是什么？区别？举几个常用方法**
 
 RDD 创建后就可以在 RDD 上进行数据处理。RDD 支持两种操作: 1. 转换（transformation）: 即从现有的数据集创建一个新的数据集 2. 动作（action）: 即在数据集上进行计算后，返回一个值给 Driver 程序
 
@@ -202,7 +202,7 @@ RDD 中所有的 Transformation 都是惰性的，也就是说，它们并不会
 
 这个设计让 Spark 更加有效的运行。
 
-**17. Spark作业提交流程是怎么样的**
+### **Spark作业提交流程是怎么样的**
 
 - `spark-submit` 提交代码，执行 `new SparkContext()`，在 SparkContext 里构造 `DAGScheduler` 和 `TaskScheduler`。
 
@@ -226,7 +226,7 @@ RDD 中所有的 Transformation 都是惰性的，也就是说，它们并不会
 
   (TaskRunner 将我们编写的代码，拷贝，反序列化，执行 Task，每个 Task 执行 RDD 里的一个 partition)
 
-**18. Spark streamning工作流程是怎么样的，和Storm比有什么区别**
+### **Spark streamning工作流程是怎么样的，和Storm比有什么区别**
 
 Spark Streaming 与 Storm 都可以用于进行实时流计算。但是他们两者的区别是非常大的。其中区别之一，就是，Spark Streaming 和 Storm 的计算模型完全不一样，Spark Streaming 是基于 RDD 的，因此需要将一小段时间内的，比如1秒内的数据，收集起来，作为一个 RDD，然后再针对这个 batch 的数据进行处理。而 Storm 却可以做到每来一条数据，都可以立即进行处理和计算。因此，Spark Streaming 实际上严格意义上来说，只能称作准实时的流计算框架；而 Storm 是真正意义上的实时计算框架。此外，Storm 支持的一项高级特性，是 Spark Streaming 暂时不具备的，即 Storm 支持在分布式流式计算程序（Topology）在运行过程中，可以动态地调整并行度，从而动态提高并发处理能力。而 Spark Streaming 是无法动态调整并行度的。但是 Spark Streaming 也有其优点，首先 Spark Streaming 由于是基于 batch 进行处理的，因此相较于 Storm 基于单条数据进行处理，具有数倍甚至数十倍的吞吐量。此外，Spark Streaming 由于也身处于 Spark 生态圈内，因此Spark Streaming可以与Spark Core、Spark SQL，甚至是Spark MLlib、Spark GraphX进行无缝整合。流式处理完的数据，可以立即进行各种map、reduce转换操作，可以立即使用sql进行查询，甚至可以立即使用machine learning或者图计算算法进行处理。这种一站式的大数据处理功能和优势，是Storm无法匹敌的。因此，综合上述来看，通常在对实时性要求特别高，而且实时数据量不稳定，比如在白天有高峰期的情况下，可以选择使用Storm。但是如果是对实时性要求一般，允许1秒的准实时处理，而且不要求动态调整并行度的话，选择Spark Streaming是更好的选择。
 
@@ -236,11 +236,11 @@ Spark Streaming 与 Storm 都可以用于进行实时流计算。但是他们两
 
 参考：https://juejin.im/post/5a40b76a6fb9a045263bd279
 
-**19. Spark sql你使用过没有，在哪个项目里面使用的**
+### **Spark sql你使用过没有，在哪个项目里面使用的**
 
 离线 ETL 之类的，结合机器学习等
 
-**20. Spark 机器学习和 Spark 图计算接触过没有，举例说明你用它做过什么？**
+### **Spark 机器学习和 Spark 图计算接触过没有，举例说明你用它做过什么？**
 
 Spark 提供了很多机器学习库，我们只需要填入数据，设置参数就可以用了。使用起来非常方便。另外一方面，由于它把所有的东西都写到了内部，我们无法修改其实现过程。要想修改里面的某个环节，还的修改源码，重新编译。比如 kmeans 算法，如果没有特殊需求，很方便。但是spark内部使用的两个向量间的距离是欧式距离。如果你想改为余弦或者马氏距离，就的重新编译源码了。Spark 里面的机器学习库都是一些经典的算法，这些代码网上也好找。这些代码使用起来叫麻烦，但是很灵活。Spark 有一个很大的优势，那就是 RDD。模型的训练完全是并行的。
 
@@ -260,7 +260,7 @@ Spark 的 ML 和 MLLib 两个包区别和联系
 
    未来这两个库会并行发展。
 
-**21. Spark RDD是怎么容错的，基本原理是什么？**
+### **Spark RDD是怎么容错的，基本原理是什么？**
 
 一般来说，分布式数据集的容错性有两种方式：数据检查点和记录数据的更新。
 
@@ -406,13 +406,13 @@ Spark Streaming 的 checkpoint 机制看起来很美好，却有一个硬伤。�
 
 针对这种情况，在我们结合 Spark Streaming + kafka 的应用中，我们自行维护了消费的 offsets，这样一来及时重新编译 application，还是可以从需要的 offsets 来消费数据，这里只是举个例子，不详细展开了。
 
-**22. 为什么要用Yarn来部署Spark?**
+### **为什么要用Yarn来部署Spark?**
 
 因为 Yarn 支持动态资源配置。Standalone 模式只支持简单的固定资源分配策略，每个任务固定数量的 core，各 Job 按顺序依次分配在资源，资源不够的时候就排队。这种模式比较适合单用户的情况，多用户的情境下，会有可能有些用户的任务得不到资源。
 
 Yarn 作为通用的种子资源调度平台，除了 Spark 提供调度服务之外，还可以为其他系统提供调度，如 Hadoop MapReduce, Hive 等。
 
-**23. 说说yarn-cluster和yarn-client的异同点。**
+### **说说yarn-cluster和yarn-client的异同点。**
 
 - cluster 模式会在集群的某个节点上为 Spark 程序启动一个称为 Master 的进程，然后 Driver 程序会运行正在这个 Master 进程内部，由这种进程来启动 Driver 程序，客户端完成提交的步骤后就可以退出，不需要等待 Spark 程序运行结束，这是四一职中适合生产环境的运行方式
 
@@ -420,7 +420,7 @@ Yarn 作为通用的种子资源调度平台，除了 Spark 提供调度服务�
 
   显然 Driver 在 client 模式下会对本地资源造成一定的压力。
 
-**24. 解释一下 groupByKey, reduceByKey 还有 reduceByKeyLocally**
+### **解释一下 groupByKey, reduceByKey 还有 reduceByKeyLocally**
 
 **groupByKey**
 
@@ -513,13 +513,15 @@ scala> rdd1.reduceByKeyLocally((x,y) => x + y)
 res90: scala.collection.Map[String,Int] = Map(B -> 3, A -> 2, C -> 1)
 ```
 
+### **groupByKey和reduceByKey是属于Transformation还是 Action？**
 
+前者，因为 Action 输出的不再是 RDD 了，也就意味着输出不是分布式的，而是回送到 Driver 程序。以上两种操作都是返回 RDD，所以应该属于 Transformation。
 
-**25. 说说 persist() 和 cache() 的异同**
+### **说说 persist() 和 cache() 的异同**
 
 从源码上分析，参考：https://www.jianshu.com/p/24198183e04d
 
-**26. 可以解释一下这两段程序的异同吗**
+### **可以解释一下这两段程序的异同吗**
 
 ```scala
 val counter = 0
@@ -541,15 +543,11 @@ println("Counter value: " + counter)
 
 因此说，RDD 操作不能嵌套调用，即在 RDD 操作传入的函数参数的函数体中，不可以出现 RDD 调用。
 
-**27.  说说map和mapPartitions的区别**
+### **说说map和mapPartitions的区别**
 
 map 中的 func 作用的是 RDD 中每一个元素，而 mapPartitioons 中的 func 作用的对象是 RDD 的一整个分区。所以 func 的类型是 `Iterator<T> => Iterator<T>`，其中 T 是输入 RDD 的元素类型。
 
-**28.  groupByKey和reduceByKey是属于Transformation还是 Action？**
-
-前者，因为 Action 输出的不再是 RDD 了，也就意味着输出不是分布式的，而是回送到 Driver 程序。以上两种操作都是返回 RDD，所以应该属于 Transformation。
-
-**29. 说说Spark支持的3种集群管理器**
+### **说说Spark支持的3种集群管理器**
 
 Standalone 模式: 资源管理器是 Master 节点，调度策略相对单一，只支持先进先出模式。
 
@@ -557,11 +555,11 @@ Hadoop Yarn 模式: 资源管理器是 Yarn 集群，主要用来管理资源。
 
 Apache Mesos: Mesos 是专门用于分布式系统资源管理的开源系统，与 Yarn 一样是 C++ 开发，可以对集群中的资源做弹性管理。
 
-**30. 说说Worker和Excutor的异同**
+### **说说Worker和Excutor的异同**
 
 Worker 是指每个及节点上启动的一个进程，负责管理本节点，jps 可以看到 Worker 进程在运行。Excutor 每个Spark 程序在每个节点上启动的一个进程，专属于一个 Spark 程序，与 Spark 程序有相同的生命周期，负责 Spark 在节点上启动的 Task，管理内存和磁盘。如果一个节点上有多个 Spark 程序，那么相应就会启动多个执行器。
 
-**31.  说说Spark提供的两种共享变量**
+### **说说Spark提供的两种共享变量**
 
 Spark 程序的大部分操作都是 RDD 操作，通过传入函数给 RDD 操作函数来计算，这些函数在不同的节点上并发执行，内部的变量有不同的作用域，不能相互访问，有些情况下不太方便。
 
@@ -577,33 +575,29 @@ Spark 程序的大部分操作都是 RDD 操作，通过传入函数给 RDD 操�
 
 以上两种类型都是 Spark 的共享变量。
 
-**32. 说说检查点的意义**
-
-参考21题
-
-**33. 说说Spark的高可用和容错**
+### **说说Spark的高可用和容错**
 
 ![644](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/2021/07/12/8f021b7863498e09a2082157716add64-644-c2b190.webp)![645](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/2021/07/12/7f92cd4aa6dd61cb6c99e99b23736f7e-645-87b72a.webp)![646](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/2021/07/12/9d77db1390d333c31e76a351e068494a-646-9aa16c.png)![647](https://raw.githubusercontent.com/big-white-2020/notes-image/master/img/2021/07/12/c41e50bdb3083342f2b39bd9a98a53fc-647-5052d9.webp)
 
-**34. 解释一下Spark Master的选举过程**
+### **解释一下Spark Master的选举过程**
 
 参考：https://blog.csdn.net/zhanglh046/article/details/78485745
 
-**35. 说说Spark如何实现序列化组件的**
+### **说说Spark如何实现序列化组件的**
 
 Spark通过两种方式来创建序列化器
 
-**Java序列化**
+#### **Java序列化**
 
 在默认情况下，Spark采用Java的ObjectOutputStream序列化一个对象。该方式适用于所有实现了java.io.Serializable的类。通过继承java.io.Externalizable，你能进一步控制序列化的性能。Java序列化非常灵活，但是速度较慢，在某些情况下序列化的结果也比较大。
 
-**Kryo序列化**
+#### **Kryo序列化**
 
 Spark也能使用Kryo（版本2）序列化对象。Kryo不但速度极快，而且产生的结果更为紧凑（通常能提高10倍）。Kryo的缺点是不支持所有类型，为了更好的性能，你需要提前注册程序中所使用的类（class）。
 
 Java的序列化比较简单，就和前面的一样，下面主要介绍Kryo序列化的使用。
 
-**Kryo序列化怎么用？**
+#### **Kryo序列化怎么用？**
 
 可以在创建SparkContext之前，通过调用System.setProperty("spark.serializer", "spark.KryoSerializer")，将序列化方式切换成Kryo。
 
@@ -619,13 +613,13 @@ Kryo文档描述了很多便于注册的高级选项，例如添加用户自定�
 
 
 
-**36. 说说对Master的理解**
+### **说说对Master的理解**
 
 Master 是 local-cluster 部署模式和 Standalone 部署模式中，整个 Spark 集群最为重要的组件之一，分担了对整个集群资源的管理和分配的工作。
 
 local-cluser 下，Master 作为 JVM 进程的对象启动，而在 Standalone 模式下，就是单独的进程启动。
 
-**37. 说说什么是窗口间隔和滑动间隔**
+### **说说什么是窗口间隔和滑动间隔**
 
 也叫 WriteAheadLogs，通常被用于数据库和文件系统中，保证数据操作的持久性。预写日志通常是先将操作写入到一个持久可靠的日志文件中，然后才对数据施加该操作，当加入施加该操作中出现异常，可以通过读取日志文件并重新施加该操作，从而恢复系统。
 
@@ -633,7 +627,7 @@ local-cluser 下，Master 作为 JVM 进程的对象启动，而在 Standalone �
 
 这两个机制保证了数据的零丢失，即所有的数据要么从日志中恢复，要么由数据源重发。
 
-**38. Spark Streaming小文件问题**
+### **Spark Streaming小文件问题**
 
 使用 Spark Streaming 时，如果实时计算结果要写入到 HDFS，那么不可避免的会遇到一个问题，那就是在默认情况下会产生非常多的小文件，这是由 Spark Streaming 的微批处理模式和 DStream(RDD) 的分布式(partition)特性导致的，Spark Streaming 为每个 Partition 启动一个独立的线程（一个 task/partition 一个线程）来处理数据，一旦文件输出到 HDFS，那么这个文件流就关闭了，再来一个 batch 的 parttition 任务，就再使用一个新的文件流，那么假设，一个 batch 为10s，每个输出的 DStream 有32个 partition，那么一个小时产生的文件数将会达到(3600/10)*32=11520个之多。众多小文件带来的结果是有大量的文件元信息，比如文件的 location、文件大小、block number 等需要 NameNode 来维护，NameNode 会因此鸭梨山大。不管是什么格式的文件，parquet、text、JSON 或者 Avro，都会遇到这种小文件问题，这里讨论几种处理 Spark Streaming 小文件的典型方法。
 
@@ -671,6 +665,6 @@ local-cluser 下，Master 作为 JVM 进程的对象启动，而在 Standalone �
 
 
 
-#### 参考资料
+### 参考资料
 
 引用自[独孤九剑-Spark面试80连击(上)](https://cloud.tencent.com/developer/article/1498048)
